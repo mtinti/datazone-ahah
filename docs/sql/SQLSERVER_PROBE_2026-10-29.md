@@ -54,3 +54,13 @@ Same container image, after the fixes recorded in
   in order" and throws. Restoring nullability and dropping the shadow table restores the pass.
 - Loader with `MAIN_TABLE = "dbo.ahah_datazone"`: `--print-sql` wrote both filled scripts; both
   executed; all five checks pass under the qualified name.
+
+## Third run: the upload notebook
+
+`loader/upload_ahah.ipynb`, the pyodbc path for a client that the server cannot read files from,
+executed cell by cell inside the same container (as a script, with `display` printing; the
+Jupyter kernel does not start under emulation). SQL authentication in place of Windows
+authentication; nothing else changed. Steps 1 to 7 all passed: hash match, 90-column table with
+the two-column key, 35,296 rows loaded in 3 seconds, five checks pass with the digest total
+`1313739416145945439820`, the rows per edition as expected, the twelve HEAL-Scot columns shown,
+and the eight-row join asserted.
