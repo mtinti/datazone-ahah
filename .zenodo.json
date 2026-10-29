@@ -1,0 +1,13 @@
+{
+  "title": "AHAH for SQL Server",
+  "upload_type": "software",
+  "description": "<p>A CLI pipeline that puts every edition of the Access to Healthy Assets and Hazards index (AHAH, versions 1 to 5.1, Geographic Data Science Lab, University of Liverpool, hosted by the Geographic Data Service) for Scottish data zones into one SQL Server table, values exactly as published, from hash-pinned sources, with a row digest that a load is checked against. AHAH is published under the Open Government Licence v3.0; cite Daras et al. 2019, doi:10.1038/s41597-019-0114-6.</p>",
+  "creators": [
+    {"name": "Tinti, Michele", "affiliation": "Health Informatics Centre (HIC), University of Dundee", "orcid": "0000-0002-0051-017X"}
+  ],
+  "license": "MIT",
+  "keywords": ["AHAH", "Access to Healthy Assets and Hazards", "data zone", "SQL Server", "data linkage", "Scotland"],
+  "related_identifiers": [
+    {"identifier": "10.1038/s41597-019-0114-6", "relation": "cites", "scheme": "doi"}
+  ]
+}

@@ -1,0 +1,14 @@
+[project]
+name = "ahah_ingest"
+version = "0.1.0"
+description = "AHAH (Access to Healthy Assets and Hazards) for SQL Server: every edition's Scottish data zones, values as published"
+requires-python = ">=3.12"
+dependencies = ["pandas>=3.0", "pyarrow>=24", "PyYAML>=6"]
+license = {text = "MIT"}
+authors = [{name = "Michele Tinti"}]
+
+[project.optional-dependencies]
+dev = ["pytest>=9"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

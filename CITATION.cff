@@ -1,0 +1,24 @@
+# How to cite this software, read by GitHub ("Cite this repository"). Zenodo uses .zenodo.json
+# instead whenever it exists; keep both in step, and this version with pyproject.toml.
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below, and cite AHAH itself: Daras et al. 2019, doi:10.1038/s41597-019-0114-6."
+title: "AHAH for SQL Server"
+abstract: >-
+  A CLI pipeline that puts every edition of the Access to Healthy Assets and Hazards index
+  (AHAH, versions 1 to 5.1) for Scottish data zones into one SQL Server table, values exactly as
+  published, from hash-pinned sources, with a row digest that a load is checked against.
+authors:
+  - family-names: Tinti
+    given-names: Michele
+    affiliation: "Health Informatics Centre (HIC), University of Dundee"
+    orcid: "https://orcid.org/0000-0002-0051-017X"
+version: "0.1.0"
+license: MIT
+repository-code: "https://github.com/mtinti/ahah-sqlserver"
+keywords:
+  - AHAH
+  - Access to Healthy Assets and Hazards
+  - data zone
+  - SQL Server
+  - data linkage
+  - Scotland

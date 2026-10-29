@@ -1,0 +1,40 @@
+# Decision log of the AHAH build. Each entry is dated and says what was decided and why.
+# Its SHA256 travels in the Parquet metadata and the manifest.
+version: 1
+decisions:
+  - date: 2026-10-29
+    id: one-table-all-editions
+    decision: One table, ahah_datazone, keyed by (ahah_version, datazone_code), one row per Scottish data zone per edition, with datazone_vintage. All five editions (1, 2, 3, 4, 5.1) are carried.
+    why: HEAL-Scot has settled on version 4, but the choice of what to match is made at release time. Editions are not comparable; the README says so.
+  - date: 2026-10-29
+    id: v5-1-names
+    decision: Column names are those of the version 5.1 file. Earlier editions map onto them by an explicit per-edition mapping (mapping.yaml) that names every file column exactly once.
+    why: A reader finds the names in the publisher's dictionary and report. Nothing is dropped.
+  - date: 2026-10-29
+    id: decimal-not-float
+    decision: Scores and indicators are decimal(38,20), parsed with Python Decimal from the file text, rendered in fixed notation with 20 fractional digits in the CSV, the digest and SQL. A value that does not fit stops the build.
+    why: Files carry up to 20 fractional digits and version 3 uses scientific notation; a float would alter them.
+  - date: 2026-10-29
+    id: ranks-gb-only
+    decision: Ranks, percentiles and deciles are stored as published, over Great Britain. No Scotland-only rank is computed.
+    why: A computed rank would be a new variable. Rank 1 is the healthiest, the opposite of SIMD.
+  - date: 2026-10-29
+    id: percentile-scales
+    decision: Indicator percentiles 0 to 100 and domain and index percentiles 1 to 100 are stored as published; an issue is logged with the authors (docs/PERCENTILES.md).
+    why: The two scales come from two formulas in the publisher's code. A corrected release would be a new pinned source.
+  - date: 2026-10-29
+    id: v1-v2-exponential-domains
+    decision: Version 1 and 2 domain scores go into domain_<x>_exp, NULL from version 3; probit domain scores (version 3 onward) go into domain_<x>, NULL for 1 and 2.
+    why: They invert exactly to integer ranks through the exponential transformation (review round 3), so they are not on the probit scale.
+  - date: 2026-10-29
+    id: v2-no-route-code
+    decision: The version 2 value -1 in eleven routed indicators and their deciles for S01010206 and S01010226 is kept as published and checked to occur nowhere else. Version 4's domain_e of exactly -1.0000 for S01008132 is an ordinary value.
+    why: The v2 code has no handling for it; "no route" is the likely reading and is unconfirmed.
+  - date: 2026-10-29
+    id: ur-tinyint
+    decision: The version 2 ur flag is a nullable tinyint restricted to 0 and 1, not a bit.
+    why: The copied boolean writer path turns a null into 0 or 1; the nullable-integer path keeps NULL (review round 3).
+  - date: 2026-10-29
+    id: datazone-lists
+    decision: The 2011 and 2022 data zone lookups from data.gov.scot are pinned as reference lists, independent of any postcode product. Every zone of a vintage must appear exactly once in every edition of that vintage.
+    why: postcode-simd pins no standalone list.

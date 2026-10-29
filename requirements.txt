@@ -1,0 +1,6 @@
+# Runtime, the versions this build was verified with.
+pandas==3.0.3
+pyarrow==24.0.0
+PyYAML==6.0.3
+# Tests.
+pytest==9.1.1

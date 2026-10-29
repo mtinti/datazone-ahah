@@ -1,0 +1,32 @@
+# What leaves the build: the CSV rendering of the table. Every column goes out; AHAH has no
+# coordinates or restricted fields to withhold. Version 1, 29 October 2026. The dialect and the
+# digest definition are postcode-simd's, unchanged, so the same import and check recipe applies.
+version: 1
+
+dialect:
+  delimiter: ','
+  quoting: minimal
+  encoding: utf-8
+  line_ending: "\n"
+  compression: gzip         # written with mtime 0, so the same rows give the same bytes
+
+# How a value becomes text. decimal: fixed notation, always 20 fractional digits, so the CSV, the
+# digest and SQL Server's CONVERT(varchar, decimal(38,20)) agree to the byte. Integers: plain.
+values:
+  decimal_places: 20
+  empty: ''                 # a null is an empty cell; no AHAH column is text that can be blank
+
+tables:
+  ahah_datazone:
+    file: ahah_datazone.csv.gz
+    exclude: []
+
+digest:
+  version: 1
+  hash: sha256
+  null_marker: "\0"
+  separator: "\x1F"
+  reserved: ["\0", "\x1F"]
+  prefix_bytes: 8
+  signed: true
+  total: decimal_string

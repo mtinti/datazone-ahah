@@ -1,0 +1,25 @@
+# Pinned downloads: reproducible from ahah_ingest/sources.yaml and the SOURCES.md files, never
+# committed. The SOURCES.md files themselves are committed.
+data/*
+!data/sources/
+data/sources/*
+!data/sources/geods/
+!data/sources/geods_previous/
+!data/sources/datazones/
+data/sources/*/*
+!data/sources/*/SOURCES.md
+
+# Build output is not source code; the manifest and the build report are the build's record
+# and travel with the code.
+results/*
+!results/manifest.json
+!results/BUILD_REPORT.md
+
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.DS_Store
+
+# Site-specific plumbing and filled-in scripts: never committed. Copy loader/ there to fill in.
+local/

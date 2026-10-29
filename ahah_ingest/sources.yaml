@@ -1,0 +1,87 @@
+# Pinned sources for the AHAH build. Version 1, 29 October 2026.
+#
+# A pin is never updated by the pipeline: changed bytes stop it. Each edition names the file the
+# build reads, its SHA256, the row count the publisher's data summary states for Great Britain,
+# and the Scottish data zone vintage the edition is on. The paths are relative to data/sources.
+version: 1
+
+licence: "UK Open Government Licence v3.0, access tier Open on GeoDS; registration required to download"
+attribution:
+  - "Daras K, Green MA, Davies A, Barr B, Singleton A (2019). Open data on health-related neighbourhood features in Great Britain. Scientific Data 6, 107. doi:10.1038/s41597-019-0114-6"
+  - "Data provided by the Geographic Data Service, a Smart Data Research UK investment, ES/Z504464/1"
+  - "Contains Scottish Government data zone lists, licensed under the Open Government Licence v3.0"
+
+publisher_pages:
+  geods: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah
+  geods_previous: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah-previous-versions
+  code: https://github.com/GeographicDataService/ahah
+
+# The editions, in table order. `gb_rows` is the count the publisher's data summary states.
+# `scottish_rows` is the number of data zones of the vintage, which the reference list confirms.
+editions:
+  - version: '1'
+    year: 2016
+    file: geods_previous/ahah_v1_fulldata.csv
+    sha256: 3eb9345e7e5c6dd2ae20473eb95e7e68d3db62485115bdc1069f352488e454c7
+    summary: geods_previous/data_summary_ahah_v1_fulldata.csv
+    summary_sha256: 557cca989be8b848bf133b8e441f0b6bf6be875108dda71d768e547b27931a36
+    gb_rows: 41729
+    vintage: 2011
+    code_column: lsoa11
+  - version: '2'
+    year: 2017
+    file: geods_previous/ahah_v2_fulldata.csv
+    sha256: e34c0ca0ee59ef646f47d9be188f3d4b6ca6251055784876bd9b8129f940ae84
+    summary: geods_previous/data_summary_ahah_v2_fulldata.csv
+    summary_sha256: d465566575a372a7fe86ff76691c7a7118267d7f5a372c51772fe6f23d189d7c
+    gb_rows: 41729
+    vintage: 2011
+    code_column: lsoa11
+  - version: '3'
+    year: 2022
+    file: geods_previous/ahah_v3_fulldata.csv
+    sha256: 38e02a3f88efc4e681777cc090632fb515309a31439d01841655231df83d2d37
+    summary: geods_previous/data_summary_ahah_v3_fulldata.csv
+    summary_sha256: e8b0b5e104ee6b0379086b8bd6d6278650a5798d3c1dd8c5a87440cad6ed6c15
+    gb_rows: 41729
+    vintage: 2011
+    code_column: lsoa11
+  - version: '4'
+    year: 2024
+    file: geods_previous/ahah_v4.csv
+    sha256: 55fefee78a13bd69f4ecb3c17818206d723b862cacd0ab3e0dae8153171a7a4e
+    summary: geods_previous/summary_ahah_v4.csv
+    summary_sha256: 21f0affb958eec555365054fa5bf27210b320711690c47f137da435bc53c8b23
+    gb_rows: 42648
+    vintage: 2011
+    code_column: LSOA21CD
+  - version: '5.1'
+    year: 2026
+    file: geods/ahah_v5_1.csv
+    sha256: 3067fef8ca5f718220359fc60af817fb557ecf7f798c095142d8d7f6f5f22c22
+    summary: geods/data_summary_ahah_v5_4.csv
+    summary_sha256: f3da90c6ce5dc75a7f39bc0071646e773921445000ab790cb5192bfa0328e738
+    gb_rows: 43064
+    vintage: 2022
+    code_column: lsoa21cd
+
+# The reference lists of Scottish data zones, one per vintage, independent of any postcode
+# product. Every zone of a list must appear exactly once in every edition of its vintage.
+# Filled in once the files are pinned (see data/sources/datazones/SOURCES.md).
+datazone_lists:
+  2011:
+    file: datazones/DataZone2011_lookup.csv
+    sha256: 688416b875733f62d5ceede1ac2b73c9db021e816ea8a9c6c58da0f105b601b6
+    code_column: DZ2011_Code
+    encoding: cp1252
+    zones: 6976
+    url: https://data.gov.scot/dataset/2011_data_zone_lookup/resource/20ad5f65-c5c2-407e-8355-7c25bf579e87/download
+    page: https://data.gov.scot/dataset/2011_data_zone_lookup
+  2022:
+    file: datazones/DataZone2022_lookup.csv
+    sha256: 41f51a4c0e6edbd30f81c3d8d79c37f3f557a3c1d887a10b75c07f0bc01e0891
+    code_column: DZ22_Code
+    encoding: cp1252
+    zones: 7392
+    url: https://data.gov.scot/dataset/2022_data_zone_lookup/resource/81b010f5-0207-4ee5-bd2d-e7821aa6a3dc/download
+    page: https://data.gov.scot/dataset/2022_data_zone_lookup
