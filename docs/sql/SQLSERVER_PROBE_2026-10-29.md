@@ -64,3 +64,12 @@ authentication; nothing else changed. Steps 1 to 7 all passed: hash match, 90-co
 the two-column key, 35,296 rows loaded in 3 seconds, five checks pass with the digest total
 `1313739416145945439820`, the rows per edition as expected, the twelve HEAL-Scot columns shown,
 and the eight-row join asserted.
+
+## Fourth run: the loaded table against the original GeoDS files
+
+`loader/compare_sql_with_sources.py` reads the five source CSVs with the csv module and
+Decimal, maps columns with `mapping.yaml`, pulls the whole table through pyodbc and compares
+value by value, independent of the build's reader and writers. On the table loaded by the
+notebook: 35,296 rows, **1,860,064 published cells equal, 1,245,984 absent-edition cells NULL,
+0 differences**. Then two cells were changed (one v4 `GP` by 1e-20, one v3 `ur` from NULL to 1):
+the script reported exactly those two and exited 1. Restored by reloading.

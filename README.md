@@ -53,7 +53,8 @@ verifies the file hash, imports, and runs the check script, whose expected row c
 come from the manifest, never from the loaded table. When the server cannot read the
 client's files, which rules out `BULK INSERT`, use `loader/upload_ahah.ipynb` instead: it sends the
 rows through pyodbc in chunks, then runs the same digest check and shows the table in use. Regenerate it
-after a rebuild with `python loader/make_notebook.py`. `loader/sqlserver_probe.sh` runs the loader's SQL
+after a rebuild with `python loader/make_notebook.py`. `loader/compare_sql_with_sources.py` then compares every
+cell of the loaded table with the original GeoDS files, independently of the build. `loader/sqlserver_probe.sh` runs the loader's SQL
 against a throwaway SQL Server 2022 container and adds two probes: SQL Server's rendering of
 chosen cells equals the CSV text, and the left join by data zone returns every cohort row once
 with its status (`matched`, `no_code`, `other_vintage`, `not_a_datazone`).
