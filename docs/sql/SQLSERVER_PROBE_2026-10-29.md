@@ -73,3 +73,16 @@ value by value, independent of the build's reader and writers. On the table load
 notebook: 35,296 rows, **1,860,064 published cells equal, 1,245,984 absent-edition cells NULL,
 0 differences**. Then two cells were changed (one v4 `GP` by 1e-20, one v3 `ur` from NULL to 1):
 the script reported exactly those two and exited 1. Restored by reloading.
+
+## Fifth run: the notebook's guards, after the notebook review
+
+Same container. A login `limited` with ALTER, SELECT and INSERT on `dbo` but no CREATE TABLE;
+`dbo.ahah_datazone` replaced by a one-row marker table.
+
+- Step 1 as `limited`: raises `PermissionError: limited cannot CREATE TABLE in ahah`; nothing dropped.
+- Step 1 with `check_loaded_digest.sql` absent: raises `FileNotFoundError` naming the file; nothing dropped.
+- Step 3 as `limited` with the step 1 right check bypassed: CREATE fails with error 262, the DROP
+  rolls back, and the marker table still has its row (`marker = 42`).
+- Full load as `sa`, then a copy of the table with one identical duplicate row: the rewritten
+  comparison reports `35,297 physical rows read, 35,296 distinct keys`, one difference
+  `('4', 'S01006506', 'repeated key in the table')`, exit 1. The real table: 0 differences, exit 0.

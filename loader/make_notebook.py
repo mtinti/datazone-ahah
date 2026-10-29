@@ -47,10 +47,11 @@ md("""
 lists the files it needs; connects and shows who you are connected as.
 
 **What to expect.** Three lines starting `found`, then one row: server, database, your login,
-`can_create_table = 1` and the SQL Server version (2019 or later is needed for the UTF-8 collation).
+`can_create_table = 1` and the SQL Server version (2019 or later is needed for the UTF-8 collation), then
+`ready`. A missing file or a missing right raises here and nothing later runs.
 
-**Why.** Every later step reads these files and this connection. A missing file or a missing right fails
-here, before anything is dropped.
+**Why.** Every later step reads these files and this connection. Step 3 drops and recreates the table, so
+the checks that would make it fail half way are made here, before anything is dropped.
 """)
 code("""
 # Step 1 — settings, connection, permissions, files present
@@ -79,16 +80,27 @@ if not (FOLDER / "ahah_datazone.csv").is_file() and packed.is_file():
     with gzip.open(packed, "rb") as src, open(FOLDER / "ahah_datazone.csv", "wb") as dst:
         shutil.copyfileobj(src, dst, 1 << 20)
 
+missing = []
 for name in ["ahah_datazone.csv", "import_csv.sql", "check_loaded_digest.sql"]:
     path = FOLDER / name
     print(f"{'found   ' if path.is_file() else 'MISSING '} {name:28} "
           + (f"{path.stat().st_size:>13,} bytes" if path.is_file() else ""))
+    if not path.is_file():
+        missing.append(name)
 
 with pyodbc.connect(CONN, timeout=10) as cn:
-    display(pd.read_sql(
+    who = pd.read_sql(
         "SELECT @@SERVERNAME AS srv, DB_NAME() AS db, SUSER_NAME() AS login, "
         "HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CREATE TABLE') AS can_create_table, "
-        "CONVERT(varchar(20), SERVERPROPERTY('ProductVersion')) AS version", cn))
+        "CONVERT(varchar(20), SERVERPROPERTY('ProductVersion')) AS version", cn)
+    display(who)
+
+# Nothing later may run unless everything step 3 onward needs is here: step 3 drops the table.
+if missing:
+    raise FileNotFoundError(f"missing from {FOLDER}: {', '.join(missing)}")
+if int(who.can_create_table[0]) != 1:
+    raise PermissionError(f"{who.login[0]} cannot CREATE TABLE in {DATABASE}; ask for the right before running step 3")
+print("ready")
 """)
 
 md(f"""
@@ -156,7 +168,8 @@ nvarchar(16) 2. A table showing 90 columns created, and the two key columns.
 
 **Why.** The definition ships with the build and is tested against the schema, so using it rather than
 writing one by hand guarantees the same types, nullability and key. `decimal(38,20)` holds every published
-value exactly, up to 20 fractional digits.
+value exactly, up to 20 fractional digits. The drop and the create run in one transaction: if the create
+fails, the previous table is still there.
 """)
 code("""
 # Step 3 — create the table from the shipped definition
@@ -177,10 +190,18 @@ ddl = (block.group(0)
 print(f"{len(COLUMNS)} columns:", {t: sum(1 for v in TYPES.values() if v == t) for t in sorted(set(TYPES.values()))})
 print(ddl.splitlines()[0]); print("   ..."); print("\\n".join(ddl.splitlines()[-2:]))
 
-with pyodbc.connect(CONN, timeout=30, autocommit=True) as cn:
+# One transaction: SQL Server DDL is transactional, so a failed CREATE rolls the DROP back and the
+# previous table survives. autocommit stays off until both have succeeded.
+with pyodbc.connect(CONN, timeout=30, autocommit=False) as cn:
     cur = cn.cursor()
-    cur.execute(f"DROP TABLE IF EXISTS {TABLE};")
-    cur.execute(ddl)
+    try:
+        cur.execute(f"DROP TABLE IF EXISTS {TABLE};")
+        cur.execute(ddl)
+    except Exception:
+        cn.rollback()
+        print(f"create failed; {TABLE} is as it was before this cell")
+        raise
+    cn.commit()
     display(pd.read_sql(
         f\"\"\"SELECT COUNT(*) AS columns_created,
                    SUM(CASE WHEN is_nullable = 1 THEN 1 ELSE 0 END) AS nullable
