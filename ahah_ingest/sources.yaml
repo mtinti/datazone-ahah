@@ -11,6 +11,10 @@ attribution:
   - "Data provided by the Geographic Data Service, a Smart Data Research UK investment, ES/Z504464/1"
   - "Contains Scottish Government data zone lists, licensed under the Open Government Licence v3.0"
 
+# Archived copy of every pinned file, byte for byte, under the Open Government Licence with the
+# attribution below: https://doi.org/10.5281/zenodo.23783247 (file names are <folder>__<file>).
+zenodo_sources_doi: 10.5281/zenodo.23783247
+
 publisher_pages:
   geods: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah
   geods_previous: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah-previous-versions
