@@ -31,6 +31,10 @@ Three warnings:
 - **Ranks are over Great Britain**, not Scotland. Indicator percentiles run 0 to 100, domain and
   index percentiles 1 to 100 (`docs/PERCENTILES.md`).
 
+**Pinned sources archived on Zenodo: <https://doi.org/10.5281/zenodo.23783247>.** Every file the
+build reads, byte for byte with its SHA256, under the Open Government Licence v3.0 with the
+attribution below. A fresh checkout restores `data/sources/` from that record.
+
 ## Build
 
 ```
