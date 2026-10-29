@@ -50,7 +50,10 @@ does not fit `decimal(38,20)`. It never goes through a float.
 Carry `results/ahah_datazone.csv.gz`, the two scripts in `docs/sql/` and
 `loader/load_ahah_to_sqlserver.py` to the server; fill in the EDIT block; run the loader. It
 verifies the file hash, imports, and runs the check script, whose expected row count and digest
-come from the manifest, never from the loaded table. `loader/sqlserver_probe.sh` runs the same
+come from the manifest, never from the loaded table. When the server cannot read the
+client's files, which rules out `BULK INSERT`, use `loader/upload_ahah.ipynb` instead: it sends the
+rows through pyodbc in chunks, then runs the same digest check and shows the table in use. Regenerate it
+after a rebuild with `python loader/make_notebook.py`. `loader/sqlserver_probe.sh` runs the loader's SQL
 against a throwaway SQL Server 2022 container and adds two probes: SQL Server's rendering of
 chosen cells equals the CSV text, and the left join by data zone returns every cohort row once
 with its status (`matched`, `no_code`, `other_vintage`, `not_a_datazone`).
@@ -89,7 +92,7 @@ ahah_ingest/     the build: sources.yaml (pins), mapping.yaml, output_schema.yam
 data/sources/    pinned downloads (not committed) and their SOURCES.md (committed)
 results/         build output; manifest.json and BUILD_REPORT.md are committed
 docs/            plans, reviews, data dictionary, generated SQL, how it is built, updating
-loader/          the SQL Server loader and the container probe; copy to local/ to fill in
+loader/          the SQL Server loader, the pyodbc upload notebook and the container probe; copy to local/ to fill in
 tests/           31 unit tests plus 6 that need the pinned files
 ```
 
