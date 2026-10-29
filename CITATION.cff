@@ -14,7 +14,7 @@ authors:
     orcid: "https://orcid.org/0000-0002-0051-017X"
 version: "0.1.0"
 license: MIT
-repository-code: "https://github.com/mtinti/ahah-sqlserver"
+repository-code: "https://github.com/mtinti/datazone-ahah"
 keywords:
   - AHAH
   - Access to Healthy Assets and Hazards
