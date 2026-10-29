@@ -5,6 +5,7 @@ and the comparison must report a repeated key even when the rows are identical."
 import importlib.util
 import json
 import numbers
+import re
 import sys
 import types
 from decimal import Decimal
@@ -85,20 +86,26 @@ def run_step(step, folder, log, monkeypatch, **kw):
     env = {"display": lambda df: None, "__name__": "nb"}
     exec(f'FOLDER = __import__("pathlib").Path(r"{folder}")\n', env)
     exec(cell_source(1).replace('FOLDER   = Path(r"")', 'FOLDER = FOLDER'), env)
-    if step >= 2:
-        exec(cell_source(2), env)
     if step >= 3:
+        # Step 2 hashes the real build's CSV, which a source-only checkout does not have; step 3
+        # needs only the header and the path from it.
+        exec('header = pd.read_csv(FOLDER / "ahah_datazone.csv", nrows=0, dtype=str).columns.tolist()\n'
+             'path = FOLDER / "ahah_datazone.csv"\n', env)
         exec(cell_source(3), env)
     return env
 
 
 @pytest.fixture
 def delivery(tmp_path):
-    import gzip
-    with gzip.open(ROOT / "results" / "ahah_datazone.csv.gz", "rb") as src:
-        (tmp_path / "ahah_datazone.csv").write_bytes(src.read())
+    """A delivery folder that needs no build output: the two committed SQL scripts and a one-row
+    CSV whose header is the shipped table definition's column list."""
     for name in ("import_csv.sql", "check_loaded_digest.sql"):
         (tmp_path / name).write_text((SQL / name).read_text())
+    block = re.search(r"CREATE TABLE ahah_datazone \((.*?)\n\);", (SQL / "import_csv.sql").read_text(), re.S).group(1)
+    columns = re.findall(r"\[(\w+)\] (?:nvarchar|tinyint|smallint|int|decimal)", block)
+    assert len(columns) == 90
+    row = ["4", "2011", "S01006506"] + [""] * (len(columns) - 3)
+    (tmp_path / "ahah_datazone.csv").write_text(",".join(columns) + "\n" + ",".join(row) + "\n")
     return tmp_path
 
 
@@ -139,11 +146,13 @@ def load_compare():
     return module
 
 
-HAVE_FILES = all((ROOT / "data" / "sources" / rel).is_file() for rel in
-                 ("geods/ahah_v5_1.csv", "geods_previous/ahah_v4.csv", "geods_previous/ahah_v1_fulldata.csv"))
+HAVE_BUILD = (ROOT / "results" / "ahah_datazone.parquet").is_file() and all(
+    (ROOT / "data" / "sources" / rel).is_file() for rel in
+    ("geods/ahah_v5_1.csv", "geods_previous/ahah_v4.csv", "geods_previous/ahah_v3_fulldata.csv",
+     "geods_previous/ahah_v2_fulldata.csv", "geods_previous/ahah_v1_fulldata.csv"))
 
 
-@pytest.mark.skipif(not HAVE_FILES, reason="pinned source files not present")
+@pytest.mark.skipif(not HAVE_BUILD, reason="pinned source files or build output not present")
 def test_comparison_reports_an_identical_duplicate_and_a_changed_cell():
     import yaml
     from ahah_ingest.core.output import read_table
