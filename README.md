@@ -1,4 +1,10 @@
-# AHAH for SQL Server
+# datazone-ahah
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23783415.svg)](https://doi.org/10.5281/zenodo.23783415)
+[![ci](https://github.com/mtinti/datazone-ahah/actions/workflows/ci.yml/badge.svg)](https://github.com/mtinti/datazone-ahah/actions/workflows/ci.yml)
+
+AHAH for SQL Server, by data zone. Software DOI <https://doi.org/10.5281/zenodo.23783415> (concept, every release);
+pinned sources <https://doi.org/10.5281/zenodo.23783247>.
 
 The Access to Healthy Assets and Hazards index (AHAH, Geographic Data Science Lab, University of
 Liverpool, hosted by the Geographic Data Service) in one table for SQL Server: every edition, one
