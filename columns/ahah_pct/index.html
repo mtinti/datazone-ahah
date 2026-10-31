@@ -629,7 +629,7 @@
 </table>
 <p><strong>What was done to it:</strong> <em>int</em>. The file text parsed as an integer, as published. NULL where the edition has no such column. (code: <code>ahah_ingest.reader.read_edition</code>)</p>
 <h2 id="how-it-is-checked">How it is checked<a class="headerlink" href="#how-it-is-checked" title="Permanent link">&para;</a></h2>
-<p>Result from build <code>c31db5a</code> (2026-10-31T07:16:06Z, package 0.1.0, schema <code>ahah_datazone_v1</code>).</p>
+<p>Result from build <code>072fdfd</code> (2026-10-31T08:07:56Z, package 0.1.0, schema <code>ahah_datazone_v1</code>).</p>
 <table>
 <thead>
 <tr>
@@ -828,6 +828,13 @@
 <td>readback</td>
 <td>all</td>
 <td>every cell of the re-read CSV equals the rendered text, byte for byte</td>
+<td>pass</td>
+</tr>
+<tr>
+<td><code>csv.ascii</code></td>
+<td>table</td>
+<td>all</td>
+<td>every byte of the uncompressed CSV is ASCII, so no import code page can alter a value</td>
 <td>pass</td>
 </tr>
 </tbody>
