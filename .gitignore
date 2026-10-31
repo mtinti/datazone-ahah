@@ -15,6 +15,9 @@ results/*
 !results/manifest.json
 !results/BUILD_REPORT.md
 
+# The generated provenance site.
+build/
+
 __pycache__/
 *.pyc
 .pytest_cache/

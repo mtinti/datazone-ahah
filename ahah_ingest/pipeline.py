@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pandas as pd
@@ -25,6 +27,24 @@ CONTRACT = PACKAGE / "export_contract.yaml"
 DECISIONS = PACKAGE / "decisions.yaml"
 RESULTS = ROOT / "results"
 TABLE = "ahah_datazone"
+
+
+def build_identity(root: Path = ROOT) -> dict:
+    """Which code built the table: the git commit, whether the tree was clean, the package and
+    schema versions. Outside a repository the commit is "unknown" and dirty is None: the
+    provenance site shows pass evidence only for a clean, known commit."""
+    def git(*args):
+        try:
+            r = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        return r.stdout if r.returncode == 0 else None
+    commit = (git("rev-parse", "HEAD") or "").strip() or "unknown"
+    status = git("status", "--porcelain", "--untracked-files=no") if commit != "unknown" else None
+    modified = sorted(line[3:] for line in status.splitlines() if line.strip()) if status is not None else []
+    package = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
+    return {"commit": commit, "dirty": (bool(modified) if status is not None else None), "modified": modified,
+            "package_version": package, "schema_version": output.load_schema(SCHEMA)["version"]}
 
 
 def build(results: Path = RESULTS) -> dict:
@@ -78,6 +98,7 @@ def build(results: Path = RESULTS) -> dict:
 
     manifest = {
         "built_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "build": build_identity(),
         "table": TABLE, "schema_version": schema["version"], "schema_sha256": schema["sha256"],
         "registry_sha256": registry.sha256, "mapping_sha256": sha256(MAPPING),
         "contract_sha256": contract["sha256"], "decisions_sha256": decisions_sha256,
