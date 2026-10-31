@@ -2,7 +2,8 @@
 
 Drafted 31 October 2026, after the SIMD site (`postcode-simd`, `docs/plans/Column_Provenance_Site_Plan.md`
 there); revised the same day after review (build identity, edition-scoped descriptions, document
-references, the presence check, the blue and green space expectations). Status: proposed.
+references, the presence check, the blue and green space expectations; round 2: range checks only
+where the build emits them). Status: proposed.
 
 ## Aim
 
@@ -66,7 +67,13 @@ per-edition inputs (file, SHA256, field, join key `datazone_code`), the transfor
 checks that guard it, the decision ids, and the SQL export.
 
 Checks are cited by **exact name**, each with its scope. A column's record names its own
-`v<ed>.<column>.range` for each edition that has it, and the edition-wide checks that cover it:
+`v<ed>.<column>.range` for each edition in which the build emits one, and the edition-wide checks
+that cover it. Range checks come from the rules in `check_edition`: ranks, percentiles, deciles,
+`ur`, indicators and exponential domain scores have one; the three key columns, `ahah` and the
+probit domain scores `domain_<x>` have none, so the current build emits 241 range checks for 273
+present column and edition pairs. The lineage derives applicability from the same rules, and the
+test verifies the resulting names against the manifest, so no range check is invented for a
+column that has none. The edition-wide checks are:
 `v<ed>.presence_matrix` (the column is present or absent exactly as the matrix says),
 `v<ed>.header_is_mapped`, `v<ed>.no_empty_cells`, `v<ed>.every_zone_of_<vintage>_present_once`,
 and for the routed indicators of edition 2 `v2.no_route_code_zones` and
@@ -140,8 +147,9 @@ with its hash, and allows `ours` without an external file.
 - Every input field is in `mapping.yaml` for that edition and only for editions where the presence
   matrix says the column is present; absent editions have no input.
 - Every check name a page cites is a member of the committed manifest's check set, by exact name;
-  every column cites its own range check for each edition that has it and the edition-wide checks
-  that cover it; every decision id exists.
+  every column cites every range check the build emits for it, per edition, and the edition-wide
+  checks that cover it; a key column, `ahah` and a probit domain score cite no range check, while
+  an indicator, a rank and an exponential domain score cite theirs; every decision id exists.
 - Build identity: a manifest without identity never acquires the site's commit; a dirty build shows
   no pass label; a changed configuration hash is named.
 - Hand-stated expectations: `off_licence` has inputs for editions 1 and 2 only; `domain_h_exp` for
