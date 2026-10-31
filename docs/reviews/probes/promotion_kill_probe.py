@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory() as d:
     assert flag.exists(), "child never reached the first swap"
     os.kill(child.pid, signal.SIGKILL); child.wait()
     print("child killed with", -child.returncode)
-    on_disk = {p.name: p.read_text() for p in results.iterdir() if p.is_file()}
+    on_disk = {p.name: p.read_text() for p in results.iterdir() if p.is_file() and p.name != ".lock"}
     assert on_disk[OUTPUTS[0]] == f"new {OUTPUTS[0]}" and on_disk[OUTPUTS[1]] == f"old {OUTPUTS[1]}", on_disk
     assert (results / JOURNAL).exists() and all((results / f"{n}.new").exists() for n in OUTPUTS[1:])
     print("on disk after the kill: a mixture, the journal, and every remaining .new file; nothing deleted")
@@ -51,7 +51,7 @@ with tempfile.TemporaryDirectory() as d:
     except ResultsIncomplete as e:
         print("verify_results refused:", e)
     print("recover:", recover(results))
-    assert {p.name: p.read_text() for p in results.iterdir() if p.is_file()} == {n: f"new {n}" for n in OUTPUTS}
+    assert {p.name: p.read_text() for p in results.iterdir() if p.is_file() and p.name != ".lock"} == {n: f"new {n}" for n in OUTPUTS}
     (results / "manifest.json").write_text(json.dumps({"parquet": {"sha256": "x"}, "csv": {"file": OUTPUTS[1], "sha256": "y", "rows": 0}, "built_at": "t"}))
     print("after recovery: the new generation only;", verify_results(results, files=False)["csv"]["rows"], "rows per manifest")
     print("PROBE PASSED")

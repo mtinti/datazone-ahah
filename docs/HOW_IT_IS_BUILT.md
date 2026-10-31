@@ -54,7 +54,13 @@ check stops the build before a file is written.
   start of every build) finishes forward. Nothing is deleted before the new generation is in
   place. Every consumer reads the manifest through `verify_results`, which refuses a folder with
   a journal or `.new` files and, for the loader and the probe, a Parquet or CSV whose SHA256 is
-  not the manifest's (`python -m ahah_ingest.pipeline --verify`). The manifest records the
+  not the manifest's (`python -m ahah_ingest.pipeline --verify`). One process owns `results/`
+  at a time, through an OS lock on `results/.lock` (`owned` in `pipeline.py`): a build holds it
+  from its opening recovery until its promotion is published, and recovery and verification
+  hold it for their whole run, so recovery never deletes a running build's prepared files and
+  verification never hashes files mid-swap. A second claimant is refused at once (`ResultsBusy`),
+  and the kernel drops the lock when its holder dies. The SQL probe copies the CSV out under
+  that ownership (`--export`) and reads only the copy. The manifest records the
   build identity (commit, whether the tree was clean, package and schema version), and the check
   `csv.ascii` asserts that no byte of the CSV is above 127, so no import code page can alter it.
 - `docs/sql/import_csv.sql`, `docs/sql/check_loaded_digest.sql`: generated from the schema.

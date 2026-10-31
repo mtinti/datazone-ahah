@@ -26,7 +26,7 @@ from .core import output
 from .core import text_output as tx
 from .core.sources import load_registry, sha256
 from .lineage import PACKAGE, ROOT, lineage
-from .pipeline import CONTRACT, DECISIONS, JOURNAL
+from .pipeline import CONTRACT, DECISIONS, ResultsIncomplete, verify_results
 
 MANIFEST = ROOT / "results" / "manifest.json"
 SITE_NAME = "datazone-ahah column provenance"
@@ -95,14 +95,24 @@ def _version() -> dict:
             "schema": yaml.safe_load(SCHEMA.read_text())["version"]}
 
 
-def evidence(manifest: dict | None, root: Path = ROOT) -> dict:
+def read_manifest() -> tuple:
+    """The manifest in results/ through `verify_results`, which owns the folder while it looks
+    (no second read of the folder's state), or None and the reason it was refused."""
+    try:
+        return verify_results(MANIFEST.parent, files=False), ""
+    except ResultsIncomplete as problem:
+        reason = str(problem)
+        if "no manifest" in reason:
+            return None, "no build manifest is committed"
+        return None, f"results/ was refused: {reason}"
+
+
+def evidence(manifest: dict | None, root: Path = ROOT, refused: str = "") -> dict:
     """What the committed manifest may be cited for. Pass evidence only from a clean, known build
     commit; a manifest without identity, or from a dirty tree, yields definitions only. The
     configuration hashes are compared with the current files and any difference is named."""
     if manifest is None:
-        return {"usable": False, "reason": "no build manifest is committed", "results": {}, "changed": [], "identity": None}
-    if (MANIFEST.parent / JOURNAL).exists() or any(MANIFEST.parent.glob("*.new")):
-        return {"usable": False, "reason": "results/ holds an interrupted promotion: the manifest may not describe the files beside it", "results": {}, "changed": [], "identity": None}
+        return {"usable": False, "reason": refused or "no build manifest is committed", "results": {}, "changed": [], "identity": None}
     identity = manifest.get("build")
     current = {"schema": output.load_schema(SCHEMA)["sha256"], "registry": load_registry(PACKAGE / "sources.yaml").sha256,
                "mapping": sha256(MAPPING), "contract": tx.load_contract(CONTRACT)["sha256"], "decisions": sha256(DECISIONS)}
@@ -237,8 +247,8 @@ def _write_pages(out: Path) -> dict:
     documents = yaml.safe_load((PACKAGE / "documents.yaml").read_text())["documents"]
     descriptions = yaml.safe_load((PACKAGE / "column_descriptions.yaml").read_text())["columns"]
     decisions = {d["id"]: d for d in yaml.safe_load(DECISIONS.read_text())["decisions"]}
-    manifest = json.loads(MANIFEST.read_text()) if MANIFEST.is_file() else None
-    ev = evidence(manifest)
+    manifest, refused = read_manifest()
+    ev = evidence(manifest, refused=refused)
     L = lineage()
     names = list(fields)
     by_file, by_decision, by_document = defaultdict(set), defaultdict(set), defaultdict(set)
