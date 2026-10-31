@@ -74,7 +74,8 @@ probit domain scores `domain_<x>` have none, so the current build emits 241 rang
 present column and edition pairs. The lineage derives applicability from the same rules, and the
 test verifies the resulting names against the manifest, so no range check is invented for a
 column that has none. The edition-wide checks are:
-`v<ed>.presence_matrix` (the column is present or absent exactly as the matrix says),
+`v<ed>.presence_matrix` (the column is present or absent exactly as the matrix says; cited for every
+edition, including those where the column must be NULL),
 `v<ed>.header_is_mapped`, `v<ed>.no_empty_cells`, `v<ed>.every_zone_of_<vintage>_present_once`,
 and for the routed indicators of edition 2 `v2.no_route_code_zones` and
 `v2.no_route_code_outside_routed`. A name that is not in the committed manifest's check set fails
@@ -86,9 +87,11 @@ A committed `ahah_ingest/column_descriptions.yaml`, one entry per column. The sc
 stay the short form. An entry holds one or more **edition-scoped** definitions, each with the
 editions it applies to, the text, the unit, and a reference, because definitions change between
 editions: `GP` is a network distance in kilometres in edition 1 and a drive time in minutes from
-edition 3; `greenspace` is an area measure in edition 1 and median NDVI from edition 3; `hospital`
-means one with an accident and emergency department in 5.1 only; edition 2's units are unconfirmed
-and stay so. A quotation is marked as a quotation and a project-authored explanation as ours. A
+edition 3; `greenspace` is an area measure per postcode in edition 1 and median NDVI from edition 3; `hospital`
+means one with an accident and emergency department in editions 1 and 5.1 (the paper, page 3, and the
+v5 dictionary), with editions 3 and 4 unconfirmed; the third domain is "physical environment" (green
+space and the three pollutants) in edition 1 and "air quality" from edition 3; edition 2's units are
+unconfirmed and stay so (implementation review, 31 October 2026, finding 4). A quotation is marked as a quotation and a project-authored explanation as ours. A
 reviewed correction can sit beside a quotation: the v5 dictionary calls the code column "(2011)"
 while the methodology report, section 2.2, and the zone count say 2022 data zones. A suffix
 description (`_dec`, `_pct`, `_rnk`) is shared where its meaning is identical.
@@ -141,9 +144,10 @@ with its hash, and allows `ours` without an external file.
 - Every schema column has a lineage record and a description entry covering every edition that
   carries it; every document reference resolves in the document registry with its hash; an `ours`
   reference needs no external file.
-- Edition-scoped descriptions: `GP` (kilometres in 1, minutes from 3), `greenspace` (area in 1,
-  NDVI from 3), `hospital` (A&E definition in 5.1 only), `datazone_code` (the "(2011)" quotation with
-  the 2022 correction), and the unconfirmed edition 2 wording is preserved.
+- Edition-scoped descriptions: `GP` (kilometres in 1, minutes from 3), `greenspace` (area per postcode
+  in 1, NDVI from 3), `hospital` (A&E in 1 and 5.1, unconfirmed in 3 and 4), `domain_e_exp` (physical
+  environment in 1), `datazone_code` (the "(2011)" quotation with the 2022 correction), and the
+  unconfirmed edition 2 wording is preserved.
 - Every input field is in `mapping.yaml` for that edition and only for editions where the presence
   matrix says the column is present; absent editions have no input.
 - Every check name a page cites is a member of the committed manifest's check set, by exact name;

@@ -27,6 +27,7 @@ nav:
   - Documents: documents/index.md
   - Decisions: decisions/index.md
   - Checks: checks.md
+  - Ranks and percentiles: conventions.md
 not_in_nav: |
   /columns/*.md
   /editions/*.md

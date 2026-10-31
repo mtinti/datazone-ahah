@@ -71,6 +71,20 @@ for attempt in 1 2 3 4 5; do
 done
 [ -n "$pushed" ] || [ -n "$unchanged" ] || { echo "could not update gh-pages after 5 attempts"; exit 1; }
 
+# Pages must be configured on the repository (source: the gh-pages branch, folder /) before a build
+# can be requested: an unconfigured repository answers 404 to every Pages call, so say so at once
+# instead of polling for ten minutes.
+if ! gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.source.branch' > "$work/pages_source" 2>/dev/null; then
+  echo "GitHub Pages is not enabled for ${GITHUB_REPOSITORY}: gh-pages is updated, but nothing serves it." >&2
+  echo "Enable it once (Settings, Pages, deploy from the gh-pages branch, folder /), or:" >&2
+  echo "  gh api -X POST repos/${GITHUB_REPOSITORY}/pages -f 'source[branch]=gh-pages' -f 'source[path]=/'" >&2
+  exit 1
+fi
+if [ "$(cat "$work/pages_source")" != "gh-pages" ]; then
+  echo "GitHub Pages serves branch '$(cat "$work/pages_source")', not gh-pages: fix the Pages source in the repository settings." >&2
+  exit 1
+fi
+
 # Make sure a completed Pages build contains the current gh-pages, whether or not this run changed
 # it: request a build only when none does, then wait. A later build (another run published since)
 # that contains it counts.
