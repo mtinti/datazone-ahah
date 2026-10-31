@@ -26,7 +26,7 @@ from .core import output
 from .core import text_output as tx
 from .core.sources import load_registry, sha256
 from .lineage import PACKAGE, ROOT, lineage
-from .pipeline import CONTRACT, DECISIONS
+from .pipeline import CONTRACT, DECISIONS, JOURNAL
 
 MANIFEST = ROOT / "results" / "manifest.json"
 SITE_NAME = "datazone-ahah column provenance"
@@ -101,6 +101,8 @@ def evidence(manifest: dict | None, root: Path = ROOT) -> dict:
     configuration hashes are compared with the current files and any difference is named."""
     if manifest is None:
         return {"usable": False, "reason": "no build manifest is committed", "results": {}, "changed": [], "identity": None}
+    if (MANIFEST.parent / JOURNAL).exists() or any(MANIFEST.parent.glob("*.new")):
+        return {"usable": False, "reason": "results/ holds an interrupted promotion: the manifest may not describe the files beside it", "results": {}, "changed": [], "identity": None}
     identity = manifest.get("build")
     current = {"schema": output.load_schema(SCHEMA)["sha256"], "registry": load_registry(PACKAGE / "sources.yaml").sha256,
                "mapping": sha256(MAPPING), "contract": tx.load_contract(CONTRACT)["sha256"], "decisions": sha256(DECISIONS)}

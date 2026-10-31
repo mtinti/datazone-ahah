@@ -46,9 +46,15 @@ check stops the build before a file is written.
 - `results/ahah_datazone.csv.gz`: the shared form. Empty cell = NULL; decimals with 20 places.
 - `results/ahah_datazone.parquet`: the same rows, typed, with the decision log hash in metadata.
 - `results/manifest.json`: hashes, counts, the digest total, every check.
-- The four outputs are written into a staging folder beside `results/` and promoted together only
-  after every check has passed; a failed move puts the previous generation back, so `results/`
-  never holds a Parquet beside a manifest that does not describe it. The manifest records the
+- The four outputs are written into a staging folder inside `results/` and published only after
+  every check has passed, by a journaled, forward-only promotion: the new files are first placed
+  beside the old ones as `<name>.new`, a journal is written, then each is renamed into place and
+  the journal removed. A crash before the journal leaves the old generation complete; a crash
+  after it leaves a mixture that `python -m ahah_ingest.pipeline --recover` (also run at the
+  start of every build) finishes forward. Nothing is deleted before the new generation is in
+  place. Every consumer reads the manifest through `verify_results`, which refuses a folder with
+  a journal or `.new` files and, for the loader and the probe, a Parquet or CSV whose SHA256 is
+  not the manifest's (`python -m ahah_ingest.pipeline --verify`). The manifest records the
   build identity (commit, whether the tree was clean, package and schema version), and the check
   `csv.ascii` asserts that no byte of the CSV is above 127, so no import code page can alter it.
 - `docs/sql/import_csv.sql`, `docs/sql/check_loaded_digest.sql`: generated from the schema.

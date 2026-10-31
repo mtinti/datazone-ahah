@@ -11,7 +11,8 @@ from pathlib import Path
 import nbformat as nbf
 
 ROOT = Path(__file__).resolve().parent.parent
-m = json.loads((ROOT / "results" / "manifest.json").read_text())
+from ahah_ingest.pipeline import verify_results
+m = verify_results(ROOT / "results", files=True)     # refuses an interrupted promotion or a CSV the manifest does not describe
 c = m["csv"]
 built = m["built_at"][:10]
 

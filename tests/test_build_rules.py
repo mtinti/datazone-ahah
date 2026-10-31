@@ -172,29 +172,92 @@ def test_write_csv_reports_non_ascii_bytes(tmp_path):
     assert tx.write_csv(dirty, contract, tmp_path / "d.csv.gz")["non_ascii_bytes"] == 4   # C2 A0 and C2 B5
 
 
-def test_promotion_is_all_or_nothing(tmp_path, monkeypatch):
-    """A failed move puts the previous generation back: results holds the old build or the new,
-    never a new Parquet beside an old manifest."""
-    import os
-    from ahah_ingest.pipeline import OUTPUTS, promote
+def _generations(tmp_path):
+    from ahah_ingest.pipeline import OUTPUTS
     results, staging = tmp_path / "results", tmp_path / "results" / ".staging_1"
     staging.mkdir(parents=True)
     for name in OUTPUTS:
         (results / name).write_text(f"old {name}")
         (staging / name).write_text(f"new {name}")
-    real_replace, calls = os.replace, []
+    return results, staging
 
-    def failing_replace(src, dst):
-        calls.append(str(dst))
-        if str(dst).endswith("manifest.json") and ".previous_" not in str(dst) and ".staging_" not in str(dst) and not any("manifest" in c for c in calls[:-1] if ".staging_" not in c and ".previous_" not in c):
-            raise OSError("disk full")                 # the promotion of the manifest fails once; the rollback's moves succeed
-        real_replace(src, dst)
-    monkeypatch.setattr(os, "replace", failing_replace)
+
+def _files(results):
+    return {p.name: p.read_text() for p in results.iterdir() if p.is_file()}
+
+
+def test_promotion_interrupted_before_the_journal_leaves_the_old_generation(tmp_path, monkeypatch):
+    import os
+    from ahah_ingest.pipeline import OUTPUTS, promote, recover, verify_results
+    results, staging = _generations(tmp_path)
+    real = os.replace
+
+    def failing(src, dst):
+        if str(dst).endswith("manifest.json.new"):
+            raise OSError("disk full")
+        real(src, dst)
+    monkeypatch.setattr(os, "replace", failing)
     with pytest.raises(OSError):
         promote(staging, results, OUTPUTS)
-    assert {p.name: p.read_text() for p in results.iterdir() if p.is_file()} == {n: f"old {n}" for n in OUTPUTS}
-    assert sorted(p.name for p in staging.iterdir()) == sorted(OUTPUTS)
-    monkeypatch.setattr(os, "replace", real_replace)
-    promote(staging, results, OUTPUTS)
-    assert {p.name: p.read_text() for p in results.iterdir() if p.is_file()} == {n: f"new {n}" for n in OUTPUTS}
-    assert not any(p.name.startswith(".previous_") for p in results.iterdir())
+    assert _files(results) == {n: f"old {n}" for n in OUTPUTS}            # untouched, no .new, no journal
+    assert not list(results.glob("*.new")) and not (results / ".promote.json").exists()
+    assert recover(results) == "removed 1 leftover(s) of an unfinished build"   # the fixture's staging folder
+    assert recover(results) == "nothing to recover"
+
+
+def test_promotion_interrupted_after_the_journal_is_finished_forward_and_refused_meanwhile(tmp_path, monkeypatch):
+    """The state a SIGKILL leaves between two renames: a mixture of old and new files plus the
+    journal. Nothing was deleted; every consumer refuses it; recovery completes it."""
+    import json, os
+    from ahah_ingest.pipeline import JOURNAL, OUTPUTS, ResultsIncomplete, promote, recover, verify_results
+    results, staging = _generations(tmp_path)
+    real, swapped = os.replace, []
+
+    def crashing(src, dst):
+        if str(src).endswith(".new"):
+            if len(swapped) == 1:
+                raise KeyboardInterrupt                                   # the process dies after the first swap
+            swapped.append(dst)
+        real(src, dst)
+    monkeypatch.setattr(os, "replace", crashing)
+    with pytest.raises(ResultsIncomplete):
+        promote(staging, results, OUTPUTS)
+    monkeypatch.setattr(os, "replace", real)
+    on_disk = _files(results)
+    assert on_disk[OUTPUTS[0]] == f"new {OUTPUTS[0]}" and on_disk[OUTPUTS[1]] == f"old {OUTPUTS[1]}"   # the mixture
+    assert (results / JOURNAL).exists() and (results / f"{OUTPUTS[1]}.new").read_text() == f"new {OUTPUTS[1]}"
+    with pytest.raises(ResultsIncomplete):
+        verify_results(results, files=False)
+    assert recover(results) == "finished an interrupted promotion"
+    assert _files(results) == {n: f"new {n}" for n in OUTPUTS}
+    assert not (results / JOURNAL).exists() and not list(results.glob("*.new"))
+
+
+def test_a_build_recovers_before_it_starts_and_a_pending_journal_blocks_promotion(tmp_path, monkeypatch):
+    import json
+    from ahah_ingest import pipeline
+    from ahah_ingest.pipeline import JOURNAL, OUTPUTS, ResultsIncomplete, promote
+    results, staging = _generations(tmp_path)
+    (results / f"{OUTPUTS[2]}.new").write_text("newer manifest")
+    (results / JOURNAL).write_text(json.dumps({"names": OUTPUTS}))
+    with pytest.raises(ResultsIncomplete):
+        promote(staging, results, OUTPUTS)                                # never on top of an unfinished one
+    monkeypatch.setattr(pipeline, "_build_into", lambda folder: [(folder / n).write_text(f"built {n}") for n in OUTPUTS] and {"built": True})
+    pipeline.build(results)
+    assert _files(results) == {n: f"built {n}" for n in OUTPUTS}         # the journal was finished, then the new build published
+    assert not list(results.glob(".staging_*")) and not (results / JOURNAL).exists()
+
+
+def test_verify_results_refuses_a_file_the_manifest_does_not_describe(tmp_path):
+    import json
+    from ahah_ingest.pipeline import OUTPUTS, ResultsIncomplete, verify_results
+    results = tmp_path / "results"; results.mkdir()
+    (results / OUTPUTS[0]).write_bytes(b"parquet"); (results / OUTPUTS[1]).write_bytes(b"csv")
+    import hashlib
+    good = {"parquet": {"sha256": hashlib.sha256(b"parquet").hexdigest()}, "csv": {"file": OUTPUTS[1], "sha256": hashlib.sha256(b"csv").hexdigest(), "rows": 1}, "built_at": "x"}
+    (results / "manifest.json").write_text(json.dumps(good))
+    assert verify_results(results)["csv"]["rows"] == 1
+    (results / OUTPUTS[1]).write_bytes(b"csv tampered")
+    with pytest.raises(ResultsIncomplete, match="SHA256 differs"):
+        verify_results(results)
+    assert verify_results(results, files=False)["csv"]["rows"] == 1

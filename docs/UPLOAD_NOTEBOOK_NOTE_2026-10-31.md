@@ -4,16 +4,19 @@ Two defects found and fixed in the sibling project uprn-epc are present here. Ne
 shown itself in a run of this notebook, but the conditions are the same. Record of the EPC
 case: `uprn-epc/docs/sql/NOTEBOOK_PROBE_2026-10-30.md`.
 
-## 1. A pooled connection can carry an open transaction into a later step
+## 1. A pooled connection comes back in manual-commit mode, whatever the new handle declares
 
 What the notebook does: cells 2, 8, 12 and 14 call `pyodbc.connect(CONN, ...)` with the
 default `autocommit=False`; cell 6 does so explicitly; cell 10 connects with `autocommit=True`.
 `pyodbc.pooling` is left at its default, `True`.
 
-Why that matters: with the SQL Server ODBC driver, `autocommit=False` means
-`SET IMPLICIT_TRANSACTIONS ON`, so a plain SELECT opens a transaction that stays open until a
-commit. pyodbc's pool can hand a later `connect` the same underlying session with that
-transaction still open, and `autocommit=True` on the new connection object does not close it.
+Why that matters: pyodbc's pool hands a later `connect` the same physical connection, in the
+commit mode its last user left it in. The new handle records `autocommit=True` without the
+driver changing the session, so every statement the new connection runs opens a transaction
+that nothing commits. A `with` block does not help: probed on 31 October 2026
+(`uprn-epc/loader/notebook_probe/pooling_diag.py`), the earlier block committed on exit and
+rolled back on close, and the next connection still ran inside an open transaction with pooling
+on, and did not with pooling off.
 In the EPC notebook, two `CREATE INDEX` statements ran inside the first cell's uncommitted
 transaction, held schema locks, and the next cell waited on them without a timeout. The
 notebook looked hung.
