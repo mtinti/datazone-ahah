@@ -14,8 +14,9 @@ alone, as the review asked: closing them in the child would not release the pare
 unlocking them would.
 
 Regression `test_another_thread_or_a_forked_child_is_not_the_owner`: with ownership held in the
-main thread and a live staging folder on disk, a forked child calling `recover` exits refused
-(`ResultsBusy`), a second thread calling `recover` is refused, and the staging folder survives.
+owner and a live staging folder on disk, a forked child calling `recover` exits refused
+(`ResultsBusy`; the fork runs in a fresh single-threaded interpreter, since forking a threaded
+process is deprecated), a second thread calling `recover` is refused, and the staging folder survives.
 The same-thread nesting test is unchanged and still passes.
 
 ## Finding 2, malformed export selected a build: closed
@@ -28,7 +29,7 @@ failing stubs and asserts the exit code and usage message for five malformed arg
 ## What the tests do not cover
 
 - A thread that forks while another thread holds ownership: `register_at_fork` clears the cache,
-  so the child takes the OS path, but the test forks from the owning thread only.
+  so the child takes the OS path, but the test forks from a single-threaded owner only.
 - Windows: no `fork`, and `msvcrt.locking` is still unexercised.
 - Shared filesystems across hosts, as before.
 

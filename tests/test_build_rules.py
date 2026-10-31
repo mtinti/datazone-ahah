@@ -375,29 +375,43 @@ def test_export_csv_copies_the_verified_generation_and_refuses_a_mixture(tmp_pat
     assert not (tmp_path / "out2" / f"{TABLE}.csv").exists()
 
 
+FORKING_OWNER = r'''
+import os, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from ahah_ingest.pipeline import ResultsBusy, owned, recover
+results = Path(sys.argv[2])
+with owned(results):
+    pid = os.fork()
+    if pid == 0:                                       # the child: must be refused
+        try:
+            recover(results); os._exit(1)
+        except ResultsBusy:
+            os._exit(0)
+        except BaseException:
+            os._exit(2)
+    _, status = os.waitpid(pid, 0)
+    code = os.waitstatus_to_exitcode(status)
+    print("child", "refused" if code == 0 else f"exit {code}")
+    print("prepared", (results / ".staging_live" / "prepared.txt").exists())
+'''
+
+
 def test_another_thread_or_a_forked_child_is_not_the_owner(tmp_path):
     """The reentrant path is for the owning thread of the owning process only (review of 31
     October, finding 1). A thread or a forked child calling recover() while ownership is held is
-    refused, and the running build's staging folder survives."""
-    import os, threading
+    refused, and the running build's staging folder survives. The fork runs in a fresh
+    single-threaded interpreter: forking a multi-threaded process is deprecated."""
+    import os, subprocess, sys, threading
+    from ahah_ingest.core.sources import ROOT
     from ahah_ingest.pipeline import ResultsBusy, owned, recover
     results = tmp_path / "results"; results.mkdir()
     live = results / ".staging_live"; live.mkdir(); (live / "prepared.txt").write_text("prepared")
+    if hasattr(os, "fork"):
+        out = subprocess.run([sys.executable, "-c", FORKING_OWNER, str(ROOT), str(results)], capture_output=True, text=True, timeout=60)
+        assert out.returncode == 0 and "child refused" in out.stdout and "prepared True" in out.stdout, out.stdout + out.stderr
     outcome = {}
     with owned(results):
-        if hasattr(os, "fork"):                                    # fork first, before any thread exists
-            pid = os.fork()
-            if pid == 0:                                           # the child: must be refused
-                try:
-                    recover(results)
-                    os._exit(1)
-                except ResultsBusy:
-                    os._exit(0)
-                except BaseException:
-                    os._exit(2)
-            _, status = os.waitpid(pid, 0)
-            assert os.waitstatus_to_exitcode(status) == 0, "the forked child was not refused"
-
         def compete():
             try:
                 outcome["thread"] = recover(results)
