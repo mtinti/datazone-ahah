@@ -66,8 +66,23 @@ class ResultsBusy(ResultsIncomplete):
 
 
 _HELD: dict = {}      # (pid, thread, resolved results folder) -> (lock descriptor, depth): the owner's own nesting
+
+
+def _forget_inherited_ownership() -> None:
+    """In a forked child: close the lock descriptors inherited from the parent and forget them.
+    Closing the child's copies releases nothing while the parent keeps its own, and once the
+    parent dies no surviving child keeps its lock alive. The child owns nothing; it must take
+    the OS lock itself."""
+    for fd, _ in _HELD.values():
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+    _HELD.clear()
+
+
 if hasattr(os, "register_at_fork"):
-    os.register_at_fork(after_in_child=_HELD.clear)   # a forked child owns nothing; it must take the OS lock itself
+    os.register_at_fork(after_in_child=_forget_inherited_ownership)
 
 
 @contextlib.contextmanager
@@ -90,8 +105,9 @@ def owned(results: Path = RESULTS):
         try:
             yield
         finally:
-            fd, depth = _HELD[key]
-            _HELD[key] = (fd, depth - 1)
+            if key in _HELD:                              # absent in a forked child: not ours to unwind
+                fd, depth = _HELD[key]
+                _HELD[key] = (fd, depth - 1)
         return
     if not results.is_dir():
         raise ResultsIncomplete(f"no manifest in {results}: the folder does not exist")
@@ -106,10 +122,12 @@ def owned(results: Path = RESULTS):
         try:
             yield
         finally:
-            del _HELD[key]
-            _unlock(fd)
+            if os.getpid() == key[0]:                     # the owner; a forked child leaving this block owns nothing
+                del _HELD[key]
+                _unlock(fd)
     finally:
-        os.close(fd)
+        if os.getpid() == key[0]:
+            os.close(fd)                                  # the child's copy was closed at fork
 
 
 try:

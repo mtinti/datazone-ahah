@@ -431,3 +431,64 @@ def test_malformed_commands_neither_build_nor_export(monkeypatch, capsys):
     for argv in (["--export"], ["--export", "one", "two"], ["--verify", "x"], ["--recover", "--verify"], ["build"]):
         assert pipeline.main(argv) == 2, argv
         assert "usage:" in capsys.readouterr().err
+
+
+FORK_LIFECYCLE = r'''
+import os, sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from ahah_ingest.pipeline import owned
+results, flags = Path(sys.argv[2]), Path(sys.argv[3])
+with owned(results):
+    pid = os.fork()
+    if pid == 0:
+        pass                                            # the child leaves the inherited block normally ...
+    else:
+        (flags / "owner.pid").write_text(f"{os.getpid()} {pid}")
+        time.sleep(120)                                 # ... while the owner stays inside it until killed
+if pid == 0:
+    (flags / "child.left").write_text("left the block without error")
+    while not (flags / "child.go").exists():
+        time.sleep(0.05)                                # the child outlives the owner
+    os._exit(0)
+'''
+
+
+def test_a_forked_child_neither_keeps_a_dead_owners_lock_nor_fails_leaving_the_inherited_block(tmp_path):
+    """Review of 31 October (owner-context follow-up): the child's inherited descriptors are closed
+    at fork, so a child that outlives a killed owner holds nothing, and a child that leaves the
+    inherited `owned` block normally does not unwind the parent's record."""
+    import os, signal, subprocess, sys, time
+    from ahah_ingest.core.sources import ROOT
+    from ahah_ingest.pipeline import ResultsBusy, owned
+    if not hasattr(os, "fork"):
+        pytest.skip("no fork")
+    results = tmp_path / "results"; results.mkdir()
+    flags = tmp_path / "flags"; flags.mkdir()
+    owner = subprocess.Popen([sys.executable, "-c", FORK_LIFECYCLE, str(ROOT), str(results), str(flags)])
+    try:
+        for _ in range(600):
+            if (flags / "owner.pid").exists() and (flags / "child.left").exists():
+                break
+            time.sleep(0.05)
+        assert (flags / "child.left").exists(), "the child did not leave the inherited block cleanly"
+        _, child_pid = map(int, (flags / "owner.pid").read_text().split())
+        with pytest.raises(ResultsBusy):
+            with owned(results):
+                pass                                        # the owner is alive: refused
+        os.kill(owner.pid, signal.SIGKILL); owner.wait()
+        try:
+            os.kill(child_pid, 0)                           # the child survives its parent
+        except ProcessLookupError:
+            pytest.fail("the child died with the owner; the test proves nothing")
+        with owned(results):
+            pass                                            # the dead owner's lock is gone despite the living child
+    finally:
+        (flags / "child.go").write_text("go")
+        if owner.poll() is None:
+            owner.kill()
+    for _ in range(100):
+        try:
+            os.kill(child_pid, 0); time.sleep(0.05)
+        except ProcessLookupError:
+            break
