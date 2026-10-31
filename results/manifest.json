@@ -1,9 +1,16 @@
 {
- "built_at": "2026-10-29T20:51:39.538517+00:00",
+ "built_at": "2026-10-31T07:16:06.014325+00:00",
+ "build": {
+  "commit": "c31db5a0d3a11b56bd509d0991c66199c48a9426",
+  "dirty": false,
+  "modified": [],
+  "package_version": "0.1.0",
+  "schema_version": "ahah_datazone_v1"
+ },
  "table": "ahah_datazone",
  "schema_version": "ahah_datazone_v1",
  "schema_sha256": "0636a35a674170123e652f564c66887241fbd6bfc01425440949cde4af6964d5",
- "registry_sha256": "6b23d95ab11e9ceb27859f4310d6f44f1a61ea3ae5046b08c85d90ef78d446aa",
+ "registry_sha256": "42e9f0bb34ded1012067f0d0579da610d3c9e9f963c0ea98eef173d4e335aaba",
  "mapping_sha256": "0fbac6a58cafcc7f24e73b2cf682a587e3c49b9412dcc0108ea06a2d263e36c2",
  "contract_sha256": "044a077dd9820d9e8c9711a49fe39f2706bec1ded3fc35457e0a648016ff6748",
  "decisions_sha256": "7e991d0fae558e9713ecdf3ff603795234733d227f5a3316a2c7e769439c2aa9",
@@ -17,7 +24,7 @@
   ],
   "rows": 35296,
   "columns": 90,
-  "sha256": "6fef707bd50a5aefeb6c376295cb56e9c699d5b140c06c175261ea3c6221ee54"
+  "sha256": "00561c1df048f3f19e0ffd369684b89e7a4d448386abe8dc4c92f32a1428ffc3"
  },
  "csv": {
   "file": "ahah_datazone.csv.gz",
@@ -1852,9 +1859,9 @@
   {
    "name": "v2.no_route_code_zones",
    "passed": true,
-   "detail": "{'S01010226', 'S01010206'}",
-   "expected": "{'S01010226', 'S01010206'}",
-   "actual": "{'S01010226', 'S01010206'}"
+   "detail": "{'S01010206', 'S01010226'}",
+   "expected": "{'S01010206', 'S01010226'}",
+   "actual": "{'S01010206', 'S01010226'}"
   },
   {
    "name": "v2.no_route_code_outside_routed",
@@ -3718,9 +3725,9 @@
   {
    "name": "readback.parquet.metadata.registry_sha256",
    "passed": true,
-   "detail": "6b23d95ab11e9ceb27859f4310d6f44f1a61ea3ae5046b08c85d90ef78d446aa",
-   "expected": "6b23d95ab11e9ceb27859f4310d6f44f1a61ea3ae5046b08c85d90ef78d446aa",
-   "actual": "6b23d95ab11e9ceb27859f4310d6f44f1a61ea3ae5046b08c85d90ef78d446aa"
+   "detail": "42e9f0bb34ded1012067f0d0579da610d3c9e9f963c0ea98eef173d4e335aaba",
+   "expected": "42e9f0bb34ded1012067f0d0579da610d3c9e9f963c0ea98eef173d4e335aaba",
+   "actual": "42e9f0bb34ded1012067f0d0579da610d3c9e9f963c0ea98eef173d4e335aaba"
   },
   {
    "name": "readback.parquet.metadata.sources",
