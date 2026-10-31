@@ -1,7 +1,7 @@
 {
- "built_at": "2026-10-31T07:16:06.014325+00:00",
+ "built_at": "2026-10-31T08:07:56.784913+00:00",
  "build": {
-  "commit": "c31db5a0d3a11b56bd509d0991c66199c48a9426",
+  "commit": "072fdfd18b11282226cad3deed60da61a0ae4a71",
   "dirty": false,
   "modified": [],
   "package_version": "0.1.0",
@@ -32,6 +32,7 @@
   "bytes": 6101501,
   "uncompressed_bytes": 22037911,
   "uncompressed_sha256": "11351af109e574017a8d00f493d044dd92942f42c72624fa0c4efe054da6d5d8",
+  "non_ascii_bytes": 0,
   "rows": 35296,
   "columns": 90,
   "compression": "gzip",
@@ -99,8 +100,8 @@
  },
  "rank_convention": "Every rank, percentile and decile reads 1 as the healthiest area, the opposite of SIMD. Ranks are over Great Britain, not Scotland. Editions are not comparable with each other: use one edition per study and never compare editions over time.",
  "summary": {
-  "checks": 341,
-  "blocking_passed": 341,
+  "checks": 342,
+  "blocking_passed": 342,
   "blocking_failed": 0
  },
  "checks": [
@@ -1859,9 +1860,9 @@
   {
    "name": "v2.no_route_code_zones",
    "passed": true,
-   "detail": "{'S01010206', 'S01010226'}",
-   "expected": "{'S01010206', 'S01010226'}",
-   "actual": "{'S01010206', 'S01010226'}"
+   "detail": "{'S01010226', 'S01010206'}",
+   "expected": "{'S01010226', 'S01010206'}",
+   "actual": "{'S01010226', 'S01010206'}"
   },
   {
    "name": "v2.no_route_code_outside_routed",
@@ -3756,6 +3757,13 @@
    "detail": "90 columns compared",
    "expected": {},
    "actual": {}
+  },
+  {
+   "name": "csv.ascii",
+   "passed": true,
+   "detail": "no byte above 127 in the uncompressed CSV",
+   "expected": 0,
+   "actual": 0
   },
   {
    "name": "readback.csv.header",
