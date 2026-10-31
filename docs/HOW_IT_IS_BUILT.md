@@ -46,5 +46,10 @@ check stops the build before a file is written.
 - `results/ahah_datazone.csv.gz`: the shared form. Empty cell = NULL; decimals with 20 places.
 - `results/ahah_datazone.parquet`: the same rows, typed, with the decision log hash in metadata.
 - `results/manifest.json`: hashes, counts, the digest total, every check.
+- The four outputs are written into a staging folder beside `results/` and promoted together only
+  after every check has passed; a failed move puts the previous generation back, so `results/`
+  never holds a Parquet beside a manifest that does not describe it. The manifest records the
+  build identity (commit, whether the tree was clean, package and schema version), and the check
+  `csv.ascii` asserts that no byte of the CSV is above 127, so no import code page can alter it.
 - `docs/sql/import_csv.sql`, `docs/sql/check_loaded_digest.sql`: generated from the schema.
 - `loader/load_ahah_to_sqlserver.py`: carries this build's hash, row count and digest.

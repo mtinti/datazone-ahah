@@ -22,3 +22,12 @@ the note cites could not be opened; what follows is about AHAH only.
   sqlcmd exit capture in the probe runner (item 5); a `csv.ascii` build check (item 2); staged
   build with promotion (item 3).
 - Next release: the notebook probe (item 4), the check catalogue and decision statuses (6, 7).
+
+## Implemented, 31 October 2026, commit after `072fdfd`
+
+Items 1 (pooling off, autocommit on read-only cells, `cn.autocommit = True` after the DDL commit,
+`SET LOCK_TIMEOUT 120000` in the cells that write or build temp tables), 2 (the build check
+`csv.ascii`, which the released CSV passes with zero bytes above 127), 3 (staged build promoted as
+one generation, with a rollback test) and 5 (`pipefail`, raw capture of each sqlcmd result, line
+counts asserted before the diff) are in. The rebuild on the clean tree reproduced the CSV hash
+`505e71b6…` with 342 checks. Items 4, 6 and 7 wait for the next release.

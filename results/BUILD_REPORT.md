@@ -1,4 +1,4 @@
-# Build report: ahah_datazone, 2026-10-31T07:16:06Z
+# Build report: ahah_datazone, 2026-10-31T08:07:56Z
 
 Schema `ahah_datazone_v1`. 35,296 rows by 90 columns.
 CSV `ahah_datazone.csv.gz` SHA256 `505e71b6dc6dc02e37307e509b2ebea8538adc4f6d1d947f84b0bf6f76e74574`, digest total `1313739416145945439820`.
@@ -15,7 +15,7 @@ CSV `ahah_datazone.csv.gz` SHA256 `505e71b6dc6dc02e37307e509b2ebea8538adc4f6d1d9
 
 ## Checks
 
-341 passed, 0 failed.
+342 passed, 0 failed.
 
 | Check | Result | Detail |
 | --- | --- | --- |
@@ -165,7 +165,7 @@ CSV `ahah_datazone.csv.gz` SHA256 `505e71b6dc6dc02e37307e509b2ebea8538adc4f6d1d9
 | `v2.ahah_rnk.range` | pass | 6976 values in [1, 41729] |
 | `v2.ahah_dec.range` | pass | 6976 values in [1, 10] |
 | `v2.ahah_rnk_unique` | pass | 0 |
-| `v2.no_route_code_zones` | pass | {'S01010206', 'S01010226'} |
+| `v2.no_route_code_zones` | pass | {'S01010226', 'S01010206'} |
 | `v2.no_route_code_outside_routed` | pass | 0 |
 | `v3.scottish_rows` | pass | 6976 |
 | `v3.every_zone_of_2011_present_once` | pass | 6976 zones of the pinned list, each once |
@@ -356,6 +356,7 @@ CSV `ahah_datazone.csv.gz` SHA256 `505e71b6dc6dc02e37307e509b2ebea8538adc4f6d1d9
 | `readback.parquet.rows` | pass | 35296 |
 | `readback.parquet.primary_key_unique` | pass | 0 |
 | `readback.parquet.cells` | pass | 90 columns compared |
+| `csv.ascii` | pass | no byte above 127 in the uncompressed CSV |
 | `readback.csv.header` | pass | ['ahah_version', 'datazone_vintage', 'datazone_code', 'GP', 'bluespace', 'dentist', 'fast_food', 'gambling', 'greenspace |
 | `readback.csv.rows` | pass | 35296 |
 | `readback.csv.cells` | pass | 90 columns compared |
