@@ -29,8 +29,13 @@ def render() -> str:
     schema = load_schema(SCHEMA)
     mapping = load_mapping(MAPPING)
     registry = load_registry()
-    manifest_path = ROOT / "results" / "manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.is_file() else None
+    from .pipeline import ResultsIncomplete, verify_results
+    try:
+        manifest = verify_results(ROOT / "results", files=False)      # refuses an interrupted promotion
+    except ResultsIncomplete as problem:
+        if "no manifest" not in str(problem):
+            raise
+        manifest = None
     reverse = {v: {} for v in VERSIONS}
     for version, m in mapping.items():
         for file_col, table_col in m.items():

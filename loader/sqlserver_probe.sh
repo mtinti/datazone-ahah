@@ -2,7 +2,8 @@
 # Run the generated import and check scripts against a throwaway SQL Server 2022 container, then
 # probe the two things the Python tests cannot: that SQL Server renders a decimal(38,20) and an
 # int exactly as Python did, and that the left join returns every cohort row once with the right
-# status. Usage: sh loader/sqlserver_probe.sh   (needs docker; starts the container if absent).
+# status. Usage: bash loader/sqlserver_probe.sh   (needs docker; starts the container if absent).
+# Bash, not sh: the script uses `set -o pipefail`.
 set -euo pipefail
 # pipefail: a failing sqlcmd anywhere in a pipeline fails the run. Each sqlcmd result is first
 # written raw, so its exit status is its own, and only then filtered; the filtered file is
@@ -17,6 +18,7 @@ fi
 SQL="docker exec -i $C /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $PW -C -b"
 for i in $(seq 1 60); do $SQL -Q "SELECT 1" >/dev/null 2>&1 && break; sleep 2; done
 $SQL -Q "IF DB_ID('ahah') IS NULL CREATE DATABASE ahah"
+python3 -m ahah_ingest.pipeline --verify                     # refuses an interrupted promotion or a mismatched CSV
 ROWS=$(python3 -c "import json;print(json.load(open('results/manifest.json'))['csv']['rows'])")
 TOTAL=$(python3 -c "import json;print(json.load(open('results/manifest.json'))['csv']['digest']['total'])")
 W=$(mktemp -d)

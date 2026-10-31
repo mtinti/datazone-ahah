@@ -30,6 +30,7 @@ DECISIONS = PACKAGE / "decisions.yaml"
 RESULTS = ROOT / "results"
 TABLE = "ahah_datazone"
 OUTPUTS = [f"{TABLE}.parquet", f"{TABLE}.csv.gz", "manifest.json", "BUILD_REPORT.md"]
+JOURNAL = ".promote.json"
 
 
 def build_identity(root: Path = ROOT) -> dict:
@@ -50,12 +51,17 @@ def build_identity(root: Path = ROOT) -> dict:
             "package_version": package, "schema_version": output.load_schema(SCHEMA)["version"]}
 
 
+class ResultsIncomplete(Exception):
+    """results/ is not one complete, accepted generation."""
+
+
 def build(results: Path = RESULTS) -> dict:
-    """Build into a staging folder beside `results`, then promote the four outputs as one
-    generation only after every check has passed, so `results/` never holds a Parquet beside a
-    manifest that does not describe it."""
+    """Build into a staging folder inside `results`, then publish the four outputs as one
+    generation only after every check has passed (see `promote`). An interrupted earlier
+    promotion is finished first, so the build never starts from a mixed folder."""
     results = Path(results)
     results.mkdir(parents=True, exist_ok=True)
+    recover(results)
     staging = results / f".staging_{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%f')}"
     staging.mkdir()
     try:
@@ -67,28 +73,91 @@ def build(results: Path = RESULTS) -> dict:
 
 
 def promote(staging: Path, results: Path, names: list) -> None:
-    """Move the named outputs from staging into results as one generation: the previous files
-    are set aside first and put back if any move fails, so results holds either the old build
-    or the new one, never a mixture."""
-    aside = results / f".previous_{staging.name.removeprefix('.staging_')}"
-    aside.mkdir()
-    moved_aside, promoted = [], []
+    """Publish the outputs in `staging` as the generation in `results`.
+
+    Four files cannot be swapped in one filesystem operation, so the protocol is journaled and
+    forward-only: (1) every new file is moved into `results` under the name `<name>.new`, with
+    the old files untouched; (2) the journal `.promote.json` is written atomically, naming the
+    files to swap; (3) each `<name>.new` replaces `<name>` with an atomic rename; (4) the journal
+    is removed. A crash before (2) leaves the old generation complete and some `.new` files,
+    which `recover` deletes; a crash after (2) leaves a mixture that `recover` finishes forward,
+    since every new file is already in place. Nothing is ever deleted before the new generation
+    is complete, and no rollback is needed. `verify_results` refuses a folder in either
+    interrupted state, so no consumer reads a mixture."""
+    staging, results = Path(staging), Path(results)
+    journal = results / JOURNAL
+    if journal.exists():
+        raise ResultsIncomplete(f"an earlier promotion is unfinished: run recover() or `python -m ahah_ingest.pipeline --recover` ({journal})")
     try:
         for name in names:
-            if (results / name).exists():
-                os.replace(results / name, aside / name)
-                moved_aside.append(name)
-        for name in names:
-            os.replace(staging / name, results / name)
-            promoted.append(name)
+            os.replace(staging / name, results / f"{name}.new")
     except BaseException:
-        for name in promoted:
-            os.replace(results / name, staging / name)
-        for name in moved_aside:
-            os.replace(aside / name, results / name)
+        for name in names:
+            (results / f"{name}.new").unlink(missing_ok=True)
         raise
-    finally:
-        shutil.rmtree(aside, ignore_errors=True)
+    _write_atomic(journal, json.dumps({"names": names, "started": dt.datetime.now(dt.timezone.utc).isoformat()}))
+    try:
+        _swap(results, names)
+    except BaseException as error:
+        raise ResultsIncomplete(f"promotion interrupted after the journal was written; nothing was deleted. "
+                                f"Finish it with `python -m ahah_ingest.pipeline --recover` ({journal}): {error!r}") from error
+    journal.unlink()
+
+
+def _swap(results: Path, names: list) -> None:
+    for name in names:
+        new = results / f"{name}.new"
+        if new.exists():
+            os.replace(new, results / name)
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text)
+    os.replace(tmp, path)
+
+
+def recover(results: Path = RESULTS) -> str:
+    """Finish or clear an interrupted promotion. With a journal: swap every remaining `.new`
+    file into place and remove the journal (the new generation was complete when the journal
+    was written). Without one: delete stray `.new` files and staging folders; the old generation
+    is complete. Returns what was done."""
+    results = Path(results)
+    journal = results / JOURNAL
+    finished = False
+    if journal.exists():
+        names = json.loads(journal.read_text())["names"]
+        _swap(results, names)
+        journal.unlink()
+        finished = True
+    stray = list(results.glob("*.new")) + [p for p in results.glob(".staging_*") if p.is_dir()]
+    for p in stray:
+        shutil.rmtree(p, ignore_errors=True) if p.is_dir() else p.unlink()
+    (results / f"{JOURNAL}.tmp").unlink(missing_ok=True)
+    if finished:
+        return "finished an interrupted promotion"
+    return f"removed {len(stray)} leftover(s) of an unfinished build" if stray else "nothing to recover"
+
+
+def verify_results(results: Path = RESULTS, files: bool = True) -> dict:
+    """The manifest of `results`, after refusing an interrupted promotion (journal or `.new`
+    files present) and, with `files`, a Parquet or CSV whose SHA256 is not the manifest's.
+    Every consumer of results/ reads the manifest through this."""
+    results = Path(results)
+    if (results / JOURNAL).exists() or any(results.glob("*.new")):
+        raise ResultsIncomplete(f"{results} holds an interrupted promotion: run `python -m ahah_ingest.pipeline --recover`")
+    manifest_path = results / "manifest.json"
+    if not manifest_path.is_file():
+        raise ResultsIncomplete(f"no manifest in {results}")
+    manifest = json.loads(manifest_path.read_text())
+    if files:
+        for key in ("parquet", "csv"):
+            path = results / manifest[key]["file"] if key == "csv" else results / f"{TABLE}.parquet"
+            if not path.is_file():
+                raise ResultsIncomplete(f"{path} is missing")
+            if sha256(path) != manifest[key]["sha256"]:
+                raise ResultsIncomplete(f"{path.name} is not the file the manifest describes (SHA256 differs)")
+    return manifest
 
 
 def _build_into(results: Path) -> dict:
@@ -189,6 +258,18 @@ def build_report(manifest: dict, table: pd.DataFrame, rendered: pd.DataFrame, re
 
 
 def main(argv=None) -> int:
+    argv = list(argv or [])
+    if argv == ["--recover"]:
+        print(recover())
+        return 0
+    if argv == ["--verify"]:
+        try:
+            m = verify_results()
+        except ResultsIncomplete as problem:
+            print(f"results incomplete: {problem}", file=sys.stderr)
+            return 1
+        print(f"results complete: {m['csv']['rows']:,} rows, built {m['built_at'][:19]}Z")
+        return 0
     try:
         manifest = build()
     except BuildStopped as stop:
