@@ -66,7 +66,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest GP practice, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest GP practice: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -126,7 +127,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest dentist, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest dentist: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -156,7 +158,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest fast food outlet, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest fast food outlet: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -186,7 +189,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest gambling outlet, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest gambling outlet: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -226,7 +230,9 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest hospital, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest hospital with an accident and emergency department (specialist
+      hospitals excluded): the road network distance from the population-weighted centroid of each postcode, averaged
+      over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -244,8 +250,9 @@ columns:
     - '3'
     - '4'
     kind: ours
-    text: Drive time in minutes to the nearest hospital. Version 5.1 narrows this to a hospital with an accident
-      and emergency department; earlier editions do not say so.
+    text: Drive time in minutes to the nearest hospital. Editions 1 and 5.1 both select hospitals with an accident
+      and emergency department; the version 3 and 4 documentation held does not state the selection rule, so it
+      is unconfirmed for them.
     unit: minutes
     reference:
       kind: ours
@@ -253,7 +260,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest leisure centre, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest leisure centre: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -283,7 +291,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest pharmacy, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest pharmacy: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -313,7 +322,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest pub, bar or nightclub, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest pub, bar or nightclub: the road network distance from the
+      population-weighted centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -343,7 +353,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest tobacconist, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest tobacconist: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -373,7 +384,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Annual mean nitrogen dioxide concentration.
+    text: 'Annual mean nitrogen dioxide concentration: DEFRA modelled estimates on a 1 km grid, averaged over the
+      cells overlapping the area. Part of the physical environment domain in this edition.'
     unit: µg/m³
     reference:
       document: daras2019
@@ -403,7 +415,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Annual mean particulate matter, PM10 concentration.
+    text: 'Annual mean particulate matter, PM10 concentration: DEFRA modelled estimates on a 1 km grid, averaged
+      over the cells overlapping the area. Part of the physical environment domain in this edition.'
     unit: µg/m³
     reference:
       document: daras2019
@@ -433,7 +446,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Annual mean sulphur dioxide concentration.
+    text: 'Annual mean sulphur dioxide concentration: DEFRA modelled estimates on a 1 km grid, averaged over the
+      cells overlapping the area. Part of the physical environment domain in this edition.'
     unit: µg/m³
     reference:
       document: daras2019
@@ -463,8 +477,9 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: 'Passive green space: an area measure of green space within a 900-metre buffer of the area; the unit is
-      not stated by the paper. Scottish values run 0 to 277.5, so it is not a share.'
+    text: 'Green space: an area measure of the green space available to each postcode within a 900-metre buffer
+      of the postcode (golf courses with public access included), averaged over the area''s postcodes; the unit
+      is not stated by the paper. Scottish values run 0 to 277.5, so it is not a share.'
     unit: not stated
     reference:
       document: daras2019
@@ -494,7 +509,8 @@ columns:
   - editions:
     - '1'
     kind: paraphrase
-    text: Network distance (kilometres) to the nearest off-licence, by road from the area's postcodes.
+    text: 'Network distance (kilometres) to the nearest off-licence: the road network distance from the population-weighted
+      centroid of each postcode, averaged over the area''s postcodes.'
     unit: kilometres
     reference:
       document: daras2019
@@ -695,7 +711,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `GP` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
-      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -707,7 +723,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `bluespace` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -719,7 +735,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `dentist` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -731,7 +747,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `fast_food` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -743,7 +759,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `gambling` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -753,7 +769,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `greenspace_active` indicator over Great Britain, 0 to 100 (101 values): int(rank /
-      max rank * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      max rank * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -765,7 +781,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `hospital` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -777,7 +793,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `leisure` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -789,7 +805,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `pharmacy` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -801,7 +817,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `pub_bar` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -813,7 +829,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `tobacco` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -825,7 +841,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `NO2` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
-      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -837,7 +853,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `PM10` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
-      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -849,7 +865,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `SO2` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
-      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -861,7 +877,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the `greenspace` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
-      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      * 100); 0 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -1136,10 +1152,20 @@ columns:
   domain_e_exp:
   - editions:
     - '1'
+    kind: paraphrase
+    text: 'The physical environment domain score of edition 1, combining green space with the NO2, PM10 and SO2
+      indicators with equal weights (Daras et al. 2019, pages 3 to 5): the exponentially transformed domain rank,
+      0 to 100, 100 the worst rank. From edition 3 this column is an air quality domain without green space.'
+    unit: 0 to 100
+    reference:
+      document: daras2019
+      location: pages 3 to 5, physical environment domain
+  - editions:
     - '2'
     kind: ours
-    text: 'The air quality domain score of editions 1 and 2: the exponentially transformed domain rank, 0 to 100,
-      100 the worst rank. It inverts exactly to an integer rank, so it is not the probit scale of the later editions.'
+    text: The exponentially transformed domain rank, 0 to 100, 100 the worst rank, as in edition 1; which indicators
+      edition 2 combines is unconfirmed (its documentation is not held). It inverts exactly to an integer rank,
+      so it is not the probit scale of the later editions.
     unit: 0 to 100
     reference:
       kind: ours
@@ -1213,8 +1239,8 @@ columns:
     - '4'
     - '5.1'
     kind: ours
-    text: 'Percentile of the health domain over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 (or
-      0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    text: 'Percentile of the health domain over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 is
+      the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -1226,7 +1252,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the green and blue space domain over Great Britain, 1 to 100: the rank cut into 100 equal
-      bins; 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      bins; 1 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -1238,7 +1264,7 @@ columns:
     - '5.1'
     kind: ours
     text: 'Percentile of the air quality domain over Great Britain, 1 to 100: the rank cut into 100 equal bins;
-      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+      1 is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -1249,8 +1275,8 @@ columns:
     - '4'
     - '5.1'
     kind: ours
-    text: 'Percentile of the retail domain over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 (or
-      0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    text: 'Percentile of the retail domain over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 is
+      the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours
@@ -1277,9 +1303,18 @@ columns:
   domain_e_dec:
   - editions:
     - '1'
+    kind: paraphrase
+    text: Decile of the physical environment domain (green space and the three air pollutants) over Great Britain,
+      1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      document: daras2019
+      location: pages 3 to 5, physical environment domain
+  - editions:
     - '2'
     kind: ours
-    text: Decile of the air quality domain over Great Britain, 1 to 10; 1 is the healthiest.
+    text: Decile of the domain over Great Britain, 1 to 10; 1 is the healthiest. Which indicators edition 2 combines
+      in this domain is unconfirmed.
     unit: decile
     reference:
       kind: ours
@@ -1353,8 +1388,8 @@ columns:
     - '4'
     - '5.1'
     kind: ours
-    text: 'Percentile of the overall index over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 (or
-      0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    text: 'Percentile of the overall index over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 is
+      the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
     unit: percentile
     reference:
       kind: ours

@@ -9,8 +9,9 @@ declarations and the build's own check rules, never typed by hand
 - absent: the editions in which the column is NULL;
 - transformation: its kind, the rule in words, and the code that applies it;
 - checks: the exact names of the build checks that guard it, each with its scope (the column,
-  or the whole edition), as the build emits them; whether a build passed them is in that
-  build's manifest.json["checks"];
+  the whole edition, a source file, the table, or the readback), as the build emits them; the
+  presence check of every edition is cited, including the editions where the column must be
+  NULL; whether a build passed them is in that build's manifest.json["checks"];
 - decisions: ids from decisions.yaml;
 - export: the CSV column and the SQL Server type.
 """
@@ -145,11 +146,17 @@ def lineage() -> dict:
         for ed in registry.editions:
             if ed["version"] in f["editions"]:
                 checks += _edition_checks(f, ed["version"], str(ed["vintage"]))
+            else:
+                # The column must be NULL in this edition: the presence check establishes that too.
+                checks.append((f"v{ed['version']}.presence_matrix", "edition"))
         checks += [(f"source.{ed['file']}", "source") for ed in registry.editions if ed["version"] in f["editions"]]
         if name == "datazone_code":
             checks += [(f"source.{spec['file']}", "source") for spec in registry.datazone_lists.values()]
         checks += [("table.columns", "table"), ("table.key_unique", "table"), ("table.required_nonnull", "table"),
-                   ("readback.parquet.cells", "table"), ("readback.csv.cells", "table")]
+                   ("readback.parquet.column_names", "readback"), ("readback.parquet.column_types", "readback"),
+                   ("readback.parquet.nullability", "readback"), ("readback.parquet.rows", "readback"),
+                   ("readback.parquet.primary_key_unique", "readback"), ("readback.parquet.cells", "readback"),
+                   ("readback.csv.header", "readback"), ("readback.csv.rows", "readback"), ("readback.csv.cells", "readback")]
         if f["type"] == "decimal":
             checks.append(("decimal_round_trip", "table"))
         out[name] = {"column": name, "group": f["group"], "type": f["type"], "nullable": f["nullable"],

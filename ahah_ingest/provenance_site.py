@@ -46,10 +46,10 @@ CHECKS = [
     (r"^source\.", "the pinned file is present and its SHA256 equals the registry's: the bytes are exactly the ones reviewed"),
     (r"^datazones_\d{4}\.count$", "the pinned data zone list has the declared number of zones"),
     (r"^datazones_\d{4}\.distinct$", "no zone is repeated in the pinned data zone list"),
-    (r"^v[\d.]+\.header_is_mapped$", "the file's header is exactly the mapped columns, in order: an added, dropped or renamed column stops the build"),
+    (r"^v[\d.]+\.header_is_mapped$", "the set of header names equals the set of mapped file columns: an added, dropped or renamed column stops the build (order is not checked; the mapping is by name)"),
     (r"^v[\d.]+\.header_unique$", "no file column name is repeated"),
     (r"^v[\d.]+\.row_width$", "every row has exactly as many cells as the header"),
-    (r"^v[\d.]+\.no_empty_cells$", "no cell of the file is empty: every published value is present"),
+    (r"^v[\d.]+\.no_empty_cells$", "no cell of a Scottish row (code starting S01) is empty: every value the table takes is present; rows of England and Wales are not checked"),
     (r"^v[\d.]+\.gb_rows$", "the file has the number of Great Britain rows the publisher's data summary states"),
     (r"^v[\d.]+\.scottish_rows$", "the Scottish rows (codes starting S01) number exactly the data zones of the vintage"),
     (r"^v[\d.]+\.scottish_code_shape$", "every Scottish code is S01 followed by six digits"),
@@ -65,8 +65,16 @@ CHECKS = [
     (r"^table\.columns$", "the assembled table has exactly the schema's columns, in order"),
     (r"^table\.key_unique$", "the key (ahah_version, datazone_code) is unique"),
     (r"^table\.required_nonnull$", "no non-nullable column holds a NULL"),
-    (r"^readback\.parquet\.", "the Parquet file, re-read, equals the table in rows, columns, types, nullability, key and every cell, and carries the expected metadata"),
-    (r"^readback\.csv\.", "the CSV, re-read, equals the rendered table in header, rows and every cell"),
+    (r"^readback\.parquet\.column_names$", "the saved Parquet file's column names equal the schema's, in order"),
+    (r"^readback\.parquet\.column_types$", "the saved Parquet file's Arrow types equal the schema's (decimal128(38,20), int8, int16, int32, string)"),
+    (r"^readback\.parquet\.nullability$", "the saved Parquet file's nullability flags equal the schema's"),
+    (r"^readback\.parquet\.rows$", "the saved Parquet file, re-read, has as many rows as the accepted table"),
+    (r"^readback\.parquet\.primary_key_unique$", "the key is unique in the re-read Parquet file"),
+    (r"^readback\.parquet\.cells$", "every cell of the re-read Parquet file equals the accepted table's, null for null and value for value"),
+    (r"^readback\.parquet\.metadata\.", "the saved Parquet file carries the named metadata key with the expected value"),
+    (r"^readback\.csv\.header$", "the written CSV's header equals the exported column list"),
+    (r"^readback\.csv\.rows$", "the written CSV, re-read, has as many rows as the rendered table"),
+    (r"^readback\.csv\.cells$", "every cell of the re-read CSV equals the rendered text, byte for byte"),
     (r"^decimal_round_trip$", "every decimal cell's 20-place text parses back to the parsed value"),
 ]
 
@@ -135,7 +143,7 @@ def _description_block(entries: list, documents: dict, lines: list, decisions_kn
             src = KIND_LABEL["ours"]
             if ref.get("decision"):
                 src += f", decision [`{ref['decision']}`](../decisions/{ref['decision']}.md)"
-        text = e["text"] if e["kind"] != "quotation" else f"“{e['text']}”"
+        text = _link_docs(e["text"] if e["kind"] != "quotation" else f"“{e['text']}”")
         lines.append(f"| {', '.join(e['editions'])} | {text} | {e.get('unit') or ''} | {src} |")
     lines.append("")
 
@@ -173,6 +181,29 @@ def _checks_table(checks: list, ev: dict) -> list:
             row += f" {_result(ev, g['names'])} |"
         lines.append(row)
     return lines + [""]
+
+
+def _link_docs(text: str) -> str:
+    return text.replace("docs/PERCENTILES.md", "[Ranks and percentiles](../conventions.md)")
+
+
+def _edition_definition(entries: list, edition: str, documents: dict) -> str:
+    """Every definition that applies to the edition, in order, each marked by kind: a quotation
+    stays with its correction and any qualification, so the edition page never shows a quoted
+    wording the review has corrected without the correction beside it."""
+    parts = []
+    for e in entries:
+        if edition not in e["editions"]:
+            continue
+        if e["kind"] == "quotation":
+            parts.append(f"“{e['text']}” (quoted, [{documents[e['reference']['document']]['title'].split('.')[0]}](../documents/{e['reference']['document']}.md))")
+        elif e["kind"] == "correction":
+            parts.append(f"**Correction:** {e['text']}")
+        elif e["kind"] == "paraphrase":
+            parts.append(f"{e['text']} (after [{documents[e['reference']['document']]['title'].split('.')[0]}](../documents/{e['reference']['document']}.md))")
+        else:
+            parts.append(e["text"])
+    return _link_docs(" ".join(parts))
 
 
 def write(out: Path) -> dict:
@@ -222,7 +253,7 @@ def _write_pages(out: Path) -> dict:
 
     for name in names:
         f, r = fields[name], L[name]
-        lines = [f"# `{name}`", "", f["description"], "",
+        lines = [f"# `{name}`", "", _link_docs(f["description"]), "",
                  f"**Type:** {f['type']} (SQL Server `{r['export']['sql_type']}`). **Nullable:** {'yes' if f['nullable'] else 'no'}. "
                  f"**Group:** [{GROUP_TITLE[f['group']]}](group-{f['group']}.md). **Editions:** " +
                  ", ".join(f"[{v}](../editions/{v}.md)" for v in f["editions"]) +
@@ -238,6 +269,9 @@ def _write_pages(out: Path) -> dict:
         lines += ["", f"**What was done to it:** *{r['transformation']['kind']}*. {r['transformation']['rule']} (code: `{r['transformation']['code']}`)", "",
                   "## How it is checked", ""]
         lines += _checks_table(r["checks"], ev)
+        if ev.get("changed"):
+            lines += ["**Changed since that build:** " + ", ".join(f"`{c}`" for c in ev["changed"]) +
+                      ". The results above come from the build named; the inputs and definitions on this page describe the current files.", ""]
         lines += ["", "## Why", ""] + [f"- [`{d}`](../decisions/{d}.md): {decisions[d]['decision']}" for d in r["decisions"]] + [""]
         lines += ["## Export", "", f"CSV column `{r['export']['csv_column']}`, in every row of `ahah_datazone.csv.gz`; SQL Server type "
                   f"`{r['export']['sql_type']}`; part of the row digest (`docs/sql/check_loaded_digest.sql`). An absent value is an empty cell and NULL.", ""]
@@ -269,8 +303,7 @@ def _write_pages(out: Path) -> dict:
                 f"SHA256 `{ed['sha256']}`, {ed['gb_rows']:,} Great Britain rows, code column `{ed['code_column']}`.", "",
                 "## Columns this edition publishes", "", "| File column | Table column | Definition in this edition |", "| --- | --- | --- |"]
         for file_col, table_col in mapping[v].items():
-            defs = [e["text"] for e in descriptions[table_col] if v in e["editions"] and e["kind"] in ("quotation", "paraphrase", "ours")]
-            page.append(f"| `{file_col}` | [`{table_col}`](../columns/{table_col}.md) | {defs[0] if defs else ''} |")
+            page.append(f"| `{file_col}` | [`{table_col}`](../columns/{table_col}.md) | {_edition_definition(descriptions[table_col], v, documents)} |")
         page += ["", "## Columns NULL in this edition", "", ", ".join(f"[`{n}`](../columns/{n}.md)" for n in lacks) or "none", ""]
         emit(out / "editions" / f"{v}.md", "\n".join(page))
     emit(out / "editions" / "index.md", "\n".join(lines))
@@ -322,6 +355,15 @@ def _write_pages(out: Path) -> dict:
         emit(out / "decisions" / f"{did}.md", "\n".join(page))
     emit(out / "decisions" / "index.md", "\n".join(lines))
 
+    # Conventions: the rank direction and the two percentile scales, from the maintained document.
+    percentiles = (ROOT / "docs" / "PERCENTILES.md").read_text()
+    emit(out / "conventions.md", "\n".join([
+        "# Ranks and percentiles", "", output.RANK_CONVENTION, "",
+        "Every `_rnk` column is a rank over Great Britain with 1 the healthiest; every `_dec` column a decile 1 to 10 with 1 the healthiest. "
+        "The percentiles come in two scales, as the document below (maintained as `docs/PERCENTILES.md` in the repository) explains. "
+        "Decision: [`percentile-scales`](decisions/percentile-scales.md); [`ranks-gb-only`](decisions/ranks-gb-only.md).", "",
+        re.sub(r"^# ", "## ", percentiles, count=1, flags=re.M)]))
+
     # Checks.
     used = sorted({c for r in L.values() for c, _ in r["checks"]})
     lines = ["# Checks", "", "What each build check tests. A column page lists the checks that guard it by exact name and scope."]
@@ -342,7 +384,8 @@ def _write_pages(out: Path) -> dict:
              "- [Pinned sources](sources/index.md): every file the build reads, by SHA256",
              "- [Documents](documents/index.md): the publisher's definitions the pages quote",
              "- [Decisions](decisions/index.md): why each column is made the way it is",
-             "- [Checks](checks.md): what each build check tests", "",
+             "- [Checks](checks.md): what each build check tests",
+             "- [Ranks and percentiles](conventions.md): the direction of every rank and the two percentile scales", "",
              f"{output.RANK_CONVENTION}", ""]
     emit(out / "index.md", "\n".join(home))
     return {"columns": len(names), "editions": len(registry.editions), "sources": len(pins), "documents": len(documents),

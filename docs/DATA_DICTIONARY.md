@@ -23,7 +23,7 @@ CSV SHA256 `505e71b6dc6dc02e37307e509b2ebea8538adc4f6d1d947f84b0bf6f76e74574`, P
 - **Version 2** (2017): Units unconfirmed: the version 2 documentation is not held. The column names suggest the revised method. Eleven routed indicators and their deciles hold -1 in S01010206 and S01010226, the likely code for no route; exclude it before averaging. `ur` is a 0/1 flag the build code does not use, probably urban = 1, undocumented.
 - **Version 3** (2022): Accessibility: drive time in minutes. Passive green space: median NDVI. Air: annual mean µg/m³ (v5 methodology, sections 3 and 5). Values may be written in scientific notation in the file; they are stored exactly.
 - **Version 4** (2024): As version 3; values are published to 4 decimals. The five health indicator ranks are dense (ties share a rank and the next rank follows), so the largest health rank is below the number of areas. Zone S01008132 has an air quality domain score of exactly -1.0000, an ordinary value.
-- **Version 5.1** (2026): As version 3, with a 15th indicator, active green space, and a hospital defined as one with an accident and emergency department. Values carry up to 20 fractional digits.
+- **Version 5.1** (2026): As version 3, with a 15th indicator, active green space, and a hospital defined as one with an accident and emergency department, as in version 1 (Daras et al. 2019, page 3); versions 3 and 4 do not state the selection. Values carry up to 20 fractional digits.
 
 ## Columns
 
