@@ -1,7 +1,7 @@
 {
- "built_at": "2026-10-31T08:07:56.784913+00:00",
+ "built_at": "2026-10-31T08:36:56.987439+00:00",
  "build": {
-  "commit": "072fdfd18b11282226cad3deed60da61a0ae4a71",
+  "commit": "1b6263b2152ac31c2fecd272d8443dee40d9efad",
   "dirty": false,
   "modified": [],
   "package_version": "0.1.0",
@@ -1860,9 +1860,9 @@
   {
    "name": "v2.no_route_code_zones",
    "passed": true,
-   "detail": "{'S01010226', 'S01010206'}",
-   "expected": "{'S01010226', 'S01010206'}",
-   "actual": "{'S01010226', 'S01010206'}"
+   "detail": "{'S01010206', 'S01010226'}",
+   "expected": "{'S01010206', 'S01010226'}",
+   "actual": "{'S01010206', 'S01010226'}"
   },
   {
    "name": "v2.no_route_code_outside_routed",
