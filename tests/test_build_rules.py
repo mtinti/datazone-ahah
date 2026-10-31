@@ -373,3 +373,47 @@ def test_export_csv_copies_the_verified_generation_and_refuses_a_mixture(tmp_pat
     with pytest.raises(ResultsIncomplete):
         export_csv(tmp_path / "out2", results)
     assert not (tmp_path / "out2" / f"{TABLE}.csv").exists()
+
+
+def test_another_thread_or_a_forked_child_is_not_the_owner(tmp_path):
+    """The reentrant path is for the owning thread of the owning process only (review of 31
+    October, finding 1). A thread or a forked child calling recover() while ownership is held is
+    refused, and the running build's staging folder survives."""
+    import os, threading
+    from ahah_ingest.pipeline import ResultsBusy, owned, recover
+    results = tmp_path / "results"; results.mkdir()
+    live = results / ".staging_live"; live.mkdir(); (live / "prepared.txt").write_text("prepared")
+    outcome = {}
+    with owned(results):
+        if hasattr(os, "fork"):                                    # fork first, before any thread exists
+            pid = os.fork()
+            if pid == 0:                                           # the child: must be refused
+                try:
+                    recover(results)
+                    os._exit(1)
+                except ResultsBusy:
+                    os._exit(0)
+                except BaseException:
+                    os._exit(2)
+            _, status = os.waitpid(pid, 0)
+            assert os.waitstatus_to_exitcode(status) == 0, "the forked child was not refused"
+
+        def compete():
+            try:
+                outcome["thread"] = recover(results)
+            except ResultsBusy as refused:
+                outcome["thread"] = refused
+        th = threading.Thread(target=compete); th.start(); th.join(10)
+        assert isinstance(outcome["thread"], ResultsBusy)
+        assert (live / "prepared.txt").exists()                   # nothing was taken for a leftover
+    assert recover(results) == "removed 1 leftover(s) of an unfinished build"
+
+
+def test_malformed_commands_neither_build_nor_export(monkeypatch, capsys):
+    from ahah_ingest import pipeline
+    monkeypatch.setattr(pipeline, "build", lambda *a, **k: pytest.fail("build must not run"))
+    monkeypatch.setattr(pipeline, "export_csv", lambda *a, **k: pytest.fail("export must not run"))
+    monkeypatch.setattr(pipeline, "recover", lambda *a, **k: pytest.fail("recover must not run"))
+    for argv in (["--export"], ["--export", "one", "two"], ["--verify", "x"], ["--recover", "--verify"], ["build"]):
+        assert pipeline.main(argv) == 2, argv
+        assert "usage:" in capsys.readouterr().err
