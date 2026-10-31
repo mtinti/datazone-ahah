@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -27,6 +29,7 @@ CONTRACT = PACKAGE / "export_contract.yaml"
 DECISIONS = PACKAGE / "decisions.yaml"
 RESULTS = ROOT / "results"
 TABLE = "ahah_datazone"
+OUTPUTS = [f"{TABLE}.parquet", f"{TABLE}.csv.gz", "manifest.json", "BUILD_REPORT.md"]
 
 
 def build_identity(root: Path = ROOT) -> dict:
@@ -48,6 +51,47 @@ def build_identity(root: Path = ROOT) -> dict:
 
 
 def build(results: Path = RESULTS) -> dict:
+    """Build into a staging folder beside `results`, then promote the four outputs as one
+    generation only after every check has passed, so `results/` never holds a Parquet beside a
+    manifest that does not describe it."""
+    results = Path(results)
+    results.mkdir(parents=True, exist_ok=True)
+    staging = results / f".staging_{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%f')}"
+    staging.mkdir()
+    try:
+        manifest = _build_into(staging)
+        promote(staging, results, OUTPUTS)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    return manifest
+
+
+def promote(staging: Path, results: Path, names: list) -> None:
+    """Move the named outputs from staging into results as one generation: the previous files
+    are set aside first and put back if any move fails, so results holds either the old build
+    or the new one, never a mixture."""
+    aside = results / f".previous_{staging.name.removeprefix('.staging_')}"
+    aside.mkdir()
+    moved_aside, promoted = [], []
+    try:
+        for name in names:
+            if (results / name).exists():
+                os.replace(results / name, aside / name)
+                moved_aside.append(name)
+        for name in names:
+            os.replace(staging / name, results / name)
+            promoted.append(name)
+    except BaseException:
+        for name in promoted:
+            os.replace(results / name, staging / name)
+        for name in moved_aside:
+            os.replace(aside / name, results / name)
+        raise
+    finally:
+        shutil.rmtree(aside, ignore_errors=True)
+
+
+def _build_into(results: Path) -> dict:
     report = Report()
     registry = load_registry()
     verify(registry, report)
@@ -73,7 +117,6 @@ def build(results: Path = RESULTS) -> dict:
     report.require()
     report.observe("rows_per_version", {e["version"]: int((table["ahah_version"] == e["version"]).sum()) for e in registry.editions})
 
-    results.mkdir(parents=True, exist_ok=True)
     metadata = output.table_metadata(registry, schema, decisions_sha256)
     parquet = results / f"{TABLE}.parquet"
     output.write_table(table, schema, parquet, metadata)
@@ -84,6 +127,9 @@ def build(results: Path = RESULTS) -> dict:
     csv_path = results / contract["tables"][TABLE]["file"]
     csv_info = tx.write_csv(rendered, contract, csv_path)
     csv_info["digest"] = tx.row_digest(rendered, contract)
+    # Every byte of the CSV is ASCII: codes, version labels and numbers. Then no code page can
+    # alter it on import (BULK INSERT reads the server's OEM code page unless told otherwise).
+    report.equal("csv.ascii", csv_info["non_ascii_bytes"], 0, detail="no byte above 127 in the uncompressed CSV")
     tx.readback_csv(csv_path, rendered, contract, report, "readback.csv")
     # Decimal round trip: the rendered text parses back to the parsed value, for every cell.
     bad = 0

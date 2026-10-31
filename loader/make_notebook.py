@@ -88,7 +88,11 @@ for name in ["ahah_datazone.csv", "import_csv.sql", "check_loaded_digest.sql"]:
     if not path.is_file():
         missing.append(name)
 
-with pyodbc.connect(CONN, timeout=10) as cn:
+# No connection pooling: every connect() is a fresh session, so nothing one cell leaves open can
+# reach another. Read-only cells use autocommit=True: with the SQL Server driver, autocommit=False
+# means implicit transactions, and a plain SELECT would open one.
+pyodbc.pooling = False
+with pyodbc.connect(CONN, timeout=10, autocommit=True) as cn:
     who = pd.read_sql(
         "SELECT @@SERVERNAME AS srv, DB_NAME() AS db, SUSER_NAME() AS login, "
         "HAS_PERMS_BY_NAME(DB_NAME(), 'DATABASE', 'CREATE TABLE') AS can_create_table, "
@@ -194,6 +198,7 @@ print(ddl.splitlines()[0]); print("   ..."); print("\\n".join(ddl.splitlines()[-
 # previous table survives. autocommit stays off until both have succeeded.
 with pyodbc.connect(CONN, timeout=30, autocommit=False) as cn:
     cur = cn.cursor()
+    cur.execute("SET LOCK_TIMEOUT 120000;")          # a lock held elsewhere becomes an error after two minutes, not a silent wait
     try:
         cur.execute(f"DROP TABLE IF EXISTS {TABLE};")
         cur.execute(ddl)
@@ -202,6 +207,7 @@ with pyodbc.connect(CONN, timeout=30, autocommit=False) as cn:
         print(f"create failed; {TABLE} is as it was before this cell")
         raise
     cn.commit()
+    cn.autocommit = True                              # the queries below must not open a new transaction
     display(pd.read_sql(
         f\"\"\"SELECT COUNT(*) AS columns_created,
                    SUM(CASE WHEN is_nullable = 1 THEN 1 ELSE 0 END) AS nullable
@@ -242,8 +248,9 @@ insert = (f"INSERT INTO {TABLE} ([" + "], [".join(COLUMNS) + "]) "
           f"VALUES ({', '.join('?' * len(COLUMNS))})")
 
 started, loaded = time.time(), 0
-with pyodbc.connect(CONN, timeout=60) as cn:
+with pyodbc.connect(CONN, timeout=60) as cn:           # autocommit off: one commit per chunk
     cur = cn.cursor()
+    cur.execute("SET LOCK_TIMEOUT 120000;")
     cur.fast_executemany = True
     cur.setinputsizes([(pyodbc.SQL_WVARCHAR, 64, 0)] * len(COLUMNS))
     for chunk in pd.read_csv(path, dtype=str, keep_default_na=False, chunksize=CHUNK, encoding="utf-8"):
@@ -260,7 +267,7 @@ with pyodbc.connect(CONN, timeout=60) as cn:
             print(f"  {loaded:>7,} rows   {loaded / (time.time() - started):>6,.0f} rows/s   {time.time() - started:>5.0f}s elapsed")
 
 print(f"\\nloaded {loaded:,} rows in {time.time() - started:.0f}s")
-with pyodbc.connect(CONN, timeout=30) as cn:
+with pyodbc.connect(CONN, timeout=30, autocommit=True) as cn:
     display(pd.read_sql(f\"\"\"
         SELECT COUNT_BIG(*) AS rows_in_table,
                SUM(CASE WHEN ur IS NULL THEN 1 ELSE 0 END)                AS ur_null,
@@ -310,6 +317,7 @@ CREATE TABLE #result (table_name sysname, check_name nvarchar(200), expected nva
 print("checking structure, key, framing characters, row count and digest ...")
 started = time.time()
 with pyodbc.connect(CONN, timeout=600, autocommit=True) as cn:
+    cn.cursor().execute("SET LOCK_TIMEOUT 120000;")
     cn.cursor().execute(preamble + section)          # temp tables live for this connection
     outcome = pd.read_sql(
         \"\"\"SELECT check_name, expected, actual, difference,
@@ -341,7 +349,7 @@ raw values stay inside the safe haven.
 """)
 code("""
 # Step 6 — rows per edition, and the twelve HEAL-Scot columns of version 4
-with pyodbc.connect(CONN, timeout=60) as cn:
+with pyodbc.connect(CONN, timeout=60, autocommit=True) as cn:
     display(pd.read_sql(f\"\"\"
         SELECT ahah_version, datazone_vintage, COUNT_BIG(*) AS rows, MIN(ahah_rnk) AS best_rank, MAX(ahah_rnk) AS worst_rank
         FROM {TABLE} GROUP BY ahah_version, datazone_vintage ORDER BY datazone_vintage, ahah_version\"\"\", cn))
@@ -373,8 +381,9 @@ version 4 is the most likely mistake, and it is named rather than silently unmat
 """)
 code("""
 # Step 7 — the left join by data zone, with its statuses
-with pyodbc.connect(CONN, timeout=60) as cn:
+with pyodbc.connect(CONN, timeout=60, autocommit=True) as cn:
     cur = cn.cursor()
+    cur.execute("SET LOCK_TIMEOUT 120000;")
     cur.execute(\"\"\"DROP TABLE IF EXISTS #cohort;
         CREATE TABLE #cohort (pseudo_id int, DataZone2011Code nvarchar(20) COLLATE DATABASE_DEFAULT);
         INSERT INTO #cohort VALUES (1, 'S01006506'), (2, NULL), (3, ''), (4, 'S01013482'),

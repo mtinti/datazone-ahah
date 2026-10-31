@@ -156,7 +156,8 @@ def lineage() -> dict:
                    ("readback.parquet.column_names", "readback"), ("readback.parquet.column_types", "readback"),
                    ("readback.parquet.nullability", "readback"), ("readback.parquet.rows", "readback"),
                    ("readback.parquet.primary_key_unique", "readback"), ("readback.parquet.cells", "readback"),
-                   ("readback.csv.header", "readback"), ("readback.csv.rows", "readback"), ("readback.csv.cells", "readback")]
+                   ("readback.csv.header", "readback"), ("readback.csv.rows", "readback"), ("readback.csv.cells", "readback"),
+                   ("csv.ascii", "table")]
         if f["type"] == "decimal":
             checks.append(("decimal_round_trip", "table"))
         out[name] = {"column": name, "group": f["group"], "type": f["type"], "nullable": f["nullable"],
