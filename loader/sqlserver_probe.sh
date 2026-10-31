@@ -1,9 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Run the generated import and check scripts against a throwaway SQL Server 2022 container, then
 # probe the two things the Python tests cannot: that SQL Server renders a decimal(38,20) and an
 # int exactly as Python did, and that the left join returns every cohort row once with the right
 # status. Usage: sh loader/sqlserver_probe.sh   (needs docker; starts the container if absent).
-set -eu
+set -euo pipefail
+# pipefail: a failing sqlcmd anywhere in a pipeline fails the run. Each sqlcmd result is first
+# written raw, so its exit status is its own, and only then filtered; the filtered file is
+# re-read and its line count asserted before it is trusted.
 cd "$(dirname "$0")/.."
 PW='Ahah_test_Pw0rd!'
 C=ahah_mssql
@@ -42,7 +45,9 @@ for (v, code), row in sorted(rows.items()):
     for col in ("GP", "domain_e", "ahah", "ahah_rnk", "GP_dec", "ur", "domain_h_exp", "SO2"):
         print(f"{v}|{code}|{col}|{row[col]}")
 PY
-$SQL -d ahah -W -h -1 -s '|' -Q "SET NOCOUNT ON; SELECT ahah_version, datazone_code, c.col, ISNULL(c.val, '') FROM ahah_datazone a CROSS APPLY (VALUES ('GP', CONVERT(varchar(40), GP)), ('domain_e', CONVERT(varchar(40), domain_e)), ('ahah', CONVERT(varchar(40), ahah)), ('ahah_rnk', CONVERT(varchar(11), ahah_rnk)), ('GP_dec', CONVERT(varchar(11), GP_dec)), ('ur', CONVERT(varchar(11), ur)), ('domain_h_exp', CONVERT(varchar(40), domain_h_exp)), ('SO2', CONVERT(varchar(40), SO2))) c(col, val) WHERE (ahah_version='3' AND datazone_code='S01006506') OR (ahah_version='4' AND datazone_code='S01008132') OR (ahah_version='2' AND datazone_code='S01010206') OR (ahah_version='5.1' AND datazone_code='S01013482') OR (ahah_version='1' AND datazone_code='S01006506') ORDER BY ahah_version, datazone_code, c.col" | sed 's/ *|/|/g; s/ *$//' | grep -v '^$' > "$W/probe_actual.txt" || true
+$SQL -d ahah -W -h -1 -s '|' -Q "SET NOCOUNT ON; SELECT ahah_version, datazone_code, c.col, ISNULL(c.val, '') FROM ahah_datazone a CROSS APPLY (VALUES ('GP', CONVERT(varchar(40), GP)), ('domain_e', CONVERT(varchar(40), domain_e)), ('ahah', CONVERT(varchar(40), ahah)), ('ahah_rnk', CONVERT(varchar(11), ahah_rnk)), ('GP_dec', CONVERT(varchar(11), GP_dec)), ('ur', CONVERT(varchar(11), ur)), ('domain_h_exp', CONVERT(varchar(40), domain_h_exp)), ('SO2', CONVERT(varchar(40), SO2))) c(col, val) WHERE (ahah_version='3' AND datazone_code='S01006506') OR (ahah_version='4' AND datazone_code='S01008132') OR (ahah_version='2' AND datazone_code='S01010206') OR (ahah_version='5.1' AND datazone_code='S01013482') OR (ahah_version='1' AND datazone_code='S01006506') ORDER BY ahah_version, datazone_code, c.col" > "$W/probe_raw.txt"
+sed 's/ *|/|/g; s/ *$//' "$W/probe_raw.txt" | { grep -v '^$' || true; } > "$W/probe_actual.txt"
+[ "$(wc -l < "$W/probe_actual.txt")" -eq "$(wc -l < "$W/probe_expected.txt")" ] || { echo "rendering: expected $(wc -l < "$W/probe_expected.txt") lines, got $(wc -l < "$W/probe_actual.txt")"; exit 1; }
 sort "$W/probe_expected.txt" > "$W/e.txt"; sort "$W/probe_actual.txt" > "$W/a.txt"
 if diff "$W/e.txt" "$W/a.txt"; then echo "rendering: SQL Server text equals the CSV text for $(wc -l < "$W/e.txt") cells"; else echo "rendering: DIFFERENCES"; exit 1; fi
 echo "== probe: the left join statuses, asserted"
@@ -58,7 +63,9 @@ SELECT c.pseudo_id, ISNULL(CONVERT(varchar(11), a.ahah_rnk), 'NULL'),
 FROM @cohort AS c
 LEFT JOIN ahah_datazone AS a ON a.datazone_code = UPPER(LTRIM(RTRIM(c.DataZone2011Code))) AND a.ahah_version = N'4'
 LEFT JOIN ahah_datazone AS v ON v.datazone_code = UPPER(LTRIM(RTRIM(c.DataZone2011Code))) AND v.ahah_version = N'5.1'
-ORDER BY c.pseudo_id;" | sed 's/ *|/|/g; s/ *$//' | grep -v '^$' > "$W/join_actual.txt"
+ORDER BY c.pseudo_id;" > "$W/join_raw.txt"
+sed 's/ *|/|/g; s/ *$//' "$W/join_raw.txt" | { grep -v '^$' || true; } > "$W/join_actual.txt"
+[ "$(wc -l < "$W/join_actual.txt")" -eq 8 ] || { echo "join: expected 8 lines, got $(wc -l < "$W/join_actual.txt")"; exit 1; }
 printf '1|1001|matched\n2|NULL|no_code\n3|NULL|no_code\n4|NULL|other_vintage\n5|NULL|not_a_datazone\n6|3561|matched\n7|1001|matched\n8|NULL|no_code\n' > "$W/join_expected.txt"
 if diff "$W/join_expected.txt" "$W/join_actual.txt"; then echo "join: 8 cohort rows returned once each with the expected status"; else echo "join: DIFFERENCES"; exit 1; fi
 echo "== done; probe files in $W"

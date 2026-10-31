@@ -76,6 +76,7 @@ CHECKS = [
     (r"^readback\.csv\.rows$", "the written CSV, re-read, has as many rows as the rendered table"),
     (r"^readback\.csv\.cells$", "every cell of the re-read CSV equals the rendered text, byte for byte"),
     (r"^decimal_round_trip$", "every decimal cell's 20-place text parses back to the parsed value"),
+    (r"^csv\.ascii$", "every byte of the uncompressed CSV is ASCII, so no import code page can alter a value"),
 ]
 
 

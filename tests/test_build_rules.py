@@ -159,3 +159,42 @@ def test_v2_code_is_forbidden_in_every_non_routed_decile_and_indicator():
     report = Report()
     checks.check_edition(frame, e, SCHEMA, zones, report)
     assert not report.blocking_failures
+
+
+def test_write_csv_reports_non_ascii_bytes(tmp_path):
+    """The build's csv.ascii check reads this count: zero for the real table, counted otherwise."""
+    import pandas as pd
+    from ahah_ingest.core import text_output as tx
+    contract = tx.load_contract(Path(__file__).resolve().parent.parent / "ahah_ingest" / "export_contract.yaml")
+    clean = pd.DataFrame({"a": ["S01000001", "1.5"], "b": ["x", contract["digest"]["null_marker"]]})
+    assert tx.write_csv(clean, contract, tmp_path / "c.csv.gz")["non_ascii_bytes"] == 0
+    dirty = pd.DataFrame({"a": ["S01000001 ", "µ"], "b": ["x", "y"]})
+    assert tx.write_csv(dirty, contract, tmp_path / "d.csv.gz")["non_ascii_bytes"] == 4   # C2 A0 and C2 B5
+
+
+def test_promotion_is_all_or_nothing(tmp_path, monkeypatch):
+    """A failed move puts the previous generation back: results holds the old build or the new,
+    never a new Parquet beside an old manifest."""
+    import os
+    from ahah_ingest.pipeline import OUTPUTS, promote
+    results, staging = tmp_path / "results", tmp_path / "results" / ".staging_1"
+    staging.mkdir(parents=True)
+    for name in OUTPUTS:
+        (results / name).write_text(f"old {name}")
+        (staging / name).write_text(f"new {name}")
+    real_replace, calls = os.replace, []
+
+    def failing_replace(src, dst):
+        calls.append(str(dst))
+        if str(dst).endswith("manifest.json") and ".previous_" not in str(dst) and ".staging_" not in str(dst) and not any("manifest" in c for c in calls[:-1] if ".staging_" not in c and ".previous_" not in c):
+            raise OSError("disk full")                 # the promotion of the manifest fails once; the rollback's moves succeed
+        real_replace(src, dst)
+    monkeypatch.setattr(os, "replace", failing_replace)
+    with pytest.raises(OSError):
+        promote(staging, results, OUTPUTS)
+    assert {p.name: p.read_text() for p in results.iterdir() if p.is_file()} == {n: f"old {n}" for n in OUTPUTS}
+    assert sorted(p.name for p in staging.iterdir()) == sorted(OUTPUTS)
+    monkeypatch.setattr(os, "replace", real_replace)
+    promote(staging, results, OUTPUTS)
+    assert {p.name: p.read_text() for p in results.iterdir() if p.is_file()} == {n: f"new {n}" for n in OUTPUTS}
+    assert not any(p.name.startswith(".previous_") for p in results.iterdir())

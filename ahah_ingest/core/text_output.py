@@ -130,6 +130,7 @@ def write_csv(rendered: pd.DataFrame, contract: dict, path: Path) -> dict:
         gz.write(body)
     return {"file": path.name, "sha256": sha256(path), "bytes": path.stat().st_size,
             "uncompressed_bytes": len(body), "uncompressed_sha256": hashlib.sha256(body).hexdigest(),
+            "non_ascii_bytes": 0 if body.isascii() else sum(1 for b in body if b > 127),
             "rows": len(rendered), "columns": len(rendered.columns), "compression": dialect["compression"]}
 
 
