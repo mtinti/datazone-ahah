@@ -1,10 +1,14 @@
 """Build the table: verify the pins, read every edition, check, write, read back, record.
 
     python -m ahah_ingest.pipeline            # writes results/
+    python -m ahah_ingest.pipeline --verify   # results/ is one complete, accepted generation
+    python -m ahah_ingest.pipeline --export D # verify, then copy manifest and CSV into D
+    python -m ahah_ingest.pipeline --recover  # finish or clear an interrupted promotion
 """
 
 from __future__ import annotations
 
+import contextlib
 import datetime as dt
 import json
 import os
@@ -31,6 +35,7 @@ RESULTS = ROOT / "results"
 TABLE = "ahah_datazone"
 OUTPUTS = [f"{TABLE}.parquet", f"{TABLE}.csv.gz", "manifest.json", "BUILD_REPORT.md"]
 JOURNAL = ".promote.json"
+LOCK = ".lock"
 
 
 def build_identity(root: Path = ROOT) -> dict:
@@ -55,20 +60,88 @@ class ResultsIncomplete(Exception):
     """results/ is not one complete, accepted generation."""
 
 
+class ResultsBusy(ResultsIncomplete):
+    """Another process owns results/ right now: a build, a recovery or a verification."""
+
+
+_HELD: dict = {}      # resolved results folder -> (lock descriptor, depth), for the owning process
+
+
+@contextlib.contextmanager
+def owned(results: Path = RESULTS):
+    """Exclusive ownership of `results` for the block: an OS lock (flock) on `results/.lock`.
+
+    One owner at a time, across processes: a build holds it from before recovery until its
+    promotion is published, recovery and verification hold it for their whole run, and a
+    consumer that reads the files after verifying them holds it until it has read them. A
+    second claimant is refused at once with `ResultsBusy`, never made to wait or to act on
+    files another process is still using. The lock is reentrant within one process and is
+    released by the kernel when the holder dies, so a killed build leaves nothing to clear."""
+    results = Path(results).resolve()
+    if results in _HELD:
+        fd, depth = _HELD[results]
+        _HELD[results] = (fd, depth + 1)
+        try:
+            yield
+        finally:
+            fd, depth = _HELD[results]
+            _HELD[results] = (fd, depth - 1)
+        return
+    if not results.is_dir():
+        raise ResultsIncomplete(f"no manifest in {results}: the folder does not exist")
+    fd = os.open(results / LOCK, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        try:
+            _lock(fd)
+        except OSError as taken:
+            raise ResultsBusy(f"{results} is owned by another process (a build, recovery or verification is running); "
+                              f"try again when it has finished") from taken
+        _HELD[results] = (fd, 1)
+        try:
+            yield
+        finally:
+            del _HELD[results]
+            _unlock(fd)
+    finally:
+        os.close(fd)
+
+
+try:
+    import fcntl
+
+    def _lock(fd):
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+    def _unlock(fd):
+        fcntl.flock(fd, fcntl.LOCK_UN)
+except ImportError:                                   # Windows
+    import msvcrt
+
+    def _lock(fd):
+        msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+
+    def _unlock(fd):
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+
+
 def build(results: Path = RESULTS) -> dict:
     """Build into a staging folder inside `results`, then publish the four outputs as one
-    generation only after every check has passed (see `promote`). An interrupted earlier
-    promotion is finished first, so the build never starts from a mixed folder."""
+    generation only after every check has passed (see `promote`). The folder is owned for the
+    whole build, so no other build, recovery or verification touches it meanwhile. An
+    interrupted earlier promotion is finished first, so the build never starts from a mixed
+    folder."""
     results = Path(results)
     results.mkdir(parents=True, exist_ok=True)
-    recover(results)
-    staging = results / f".staging_{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%f')}"
-    staging.mkdir()
-    try:
-        manifest = _build_into(staging)
-        promote(staging, results, OUTPUTS)
-    finally:
-        shutil.rmtree(staging, ignore_errors=True)
+    with owned(results):
+        recover(results)
+        staging = results / f".staging_{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%f')}"
+        staging.mkdir()
+        try:
+            manifest = _build_into(staging)
+            promote(staging, results, OUTPUTS)
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
     return manifest
 
 
@@ -83,25 +156,27 @@ def promote(staging: Path, results: Path, names: list) -> None:
     which `recover` deletes; a crash after (2) leaves a mixture that `recover` finishes forward,
     since every new file is already in place. Nothing is ever deleted before the new generation
     is complete, and no rollback is needed. `verify_results` refuses a folder in either
-    interrupted state, so no consumer reads a mixture."""
+    interrupted state, so no consumer reads a mixture, and the folder is owned (see `owned`)
+    throughout, so no reader hashes files while they are being swapped."""
     staging, results = Path(staging), Path(results)
-    journal = results / JOURNAL
-    if journal.exists():
-        raise ResultsIncomplete(f"an earlier promotion is unfinished: run recover() or `python -m ahah_ingest.pipeline --recover` ({journal})")
-    try:
-        for name in names:
-            os.replace(staging / name, results / f"{name}.new")
-    except BaseException:
-        for name in names:
-            (results / f"{name}.new").unlink(missing_ok=True)
-        raise
-    _write_atomic(journal, json.dumps({"names": names, "started": dt.datetime.now(dt.timezone.utc).isoformat()}))
-    try:
-        _swap(results, names)
-    except BaseException as error:
-        raise ResultsIncomplete(f"promotion interrupted after the journal was written; nothing was deleted. "
-                                f"Finish it with `python -m ahah_ingest.pipeline --recover` ({journal}): {error!r}") from error
-    journal.unlink()
+    with owned(results):
+        journal = results / JOURNAL
+        if journal.exists():
+            raise ResultsIncomplete(f"an earlier promotion is unfinished: run recover() or `python -m ahah_ingest.pipeline --recover` ({journal})")
+        try:
+            for name in names:
+                os.replace(staging / name, results / f"{name}.new")
+        except BaseException:
+            for name in names:
+                (results / f"{name}.new").unlink(missing_ok=True)
+            raise
+        _write_atomic(journal, json.dumps({"names": names, "started": dt.datetime.now(dt.timezone.utc).isoformat()}))
+        try:
+            _swap(results, names)
+        except BaseException as error:
+            raise ResultsIncomplete(f"promotion interrupted after the journal was written; nothing was deleted. "
+                                    f"Finish it with `python -m ahah_ingest.pipeline --recover` ({journal}): {error!r}") from error
+        journal.unlink()
 
 
 def _swap(results: Path, names: list) -> None:
@@ -121,19 +196,21 @@ def recover(results: Path = RESULTS) -> str:
     """Finish or clear an interrupted promotion. With a journal: swap every remaining `.new`
     file into place and remove the journal (the new generation was complete when the journal
     was written). Without one: delete stray `.new` files and staging folders; the old generation
-    is complete. Returns what was done."""
+    is complete. Refused (`ResultsBusy`) while another process owns the folder, so a running
+    build's prepared files are never taken for leftovers. Returns what was done."""
     results = Path(results)
-    journal = results / JOURNAL
-    finished = False
-    if journal.exists():
-        names = json.loads(journal.read_text())["names"]
-        _swap(results, names)
-        journal.unlink()
-        finished = True
-    stray = list(results.glob("*.new")) + [p for p in results.glob(".staging_*") if p.is_dir()]
-    for p in stray:
-        shutil.rmtree(p, ignore_errors=True) if p.is_dir() else p.unlink()
-    (results / f"{JOURNAL}.tmp").unlink(missing_ok=True)
+    with owned(results):
+        journal = results / JOURNAL
+        finished = False
+        if journal.exists():
+            names = json.loads(journal.read_text())["names"]
+            _swap(results, names)
+            journal.unlink()
+            finished = True
+        stray = list(results.glob("*.new")) + [p for p in results.glob(".staging_*") if p.is_dir()]
+        for p in stray:
+            shutil.rmtree(p, ignore_errors=True) if p.is_dir() else p.unlink()
+        (results / f"{JOURNAL}.tmp").unlink(missing_ok=True)
     if finished:
         return "finished an interrupted promotion"
     return f"removed {len(stray)} leftover(s) of an unfinished build" if stray else "nothing to recover"
@@ -142,21 +219,40 @@ def recover(results: Path = RESULTS) -> str:
 def verify_results(results: Path = RESULTS, files: bool = True) -> dict:
     """The manifest of `results`, after refusing an interrupted promotion (journal or `.new`
     files present) and, with `files`, a Parquet or CSV whose SHA256 is not the manifest's.
-    Every consumer of results/ reads the manifest through this."""
+    Every consumer of results/ reads the manifest through this. The folder is owned for the
+    whole check, so the marker test, the manifest and the hashes describe one state; a
+    consumer that then opens the files must do so inside its own `with owned(results)` block
+    (as `export_csv` does), or the files may have been swapped since."""
     results = Path(results)
-    if (results / JOURNAL).exists() or any(results.glob("*.new")):
-        raise ResultsIncomplete(f"{results} holds an interrupted promotion: run `python -m ahah_ingest.pipeline --recover`")
-    manifest_path = results / "manifest.json"
-    if not manifest_path.is_file():
-        raise ResultsIncomplete(f"no manifest in {results}")
-    manifest = json.loads(manifest_path.read_text())
-    if files:
-        for key in ("parquet", "csv"):
-            path = results / manifest[key]["file"] if key == "csv" else results / f"{TABLE}.parquet"
-            if not path.is_file():
-                raise ResultsIncomplete(f"{path} is missing")
-            if sha256(path) != manifest[key]["sha256"]:
-                raise ResultsIncomplete(f"{path.name} is not the file the manifest describes (SHA256 differs)")
+    with owned(results):
+        if (results / JOURNAL).exists() or any(results.glob("*.new")):
+            raise ResultsIncomplete(f"{results} holds an interrupted promotion: run `python -m ahah_ingest.pipeline --recover`")
+        manifest_path = results / "manifest.json"
+        if not manifest_path.is_file():
+            raise ResultsIncomplete(f"no manifest in {results}")
+        manifest = json.loads(manifest_path.read_text())
+        if files:
+            for key in ("parquet", "csv"):
+                path = results / manifest[key]["file"] if key == "csv" else results / f"{TABLE}.parquet"
+                if not path.is_file():
+                    raise ResultsIncomplete(f"{path} is missing")
+                if sha256(path) != manifest[key]["sha256"]:
+                    raise ResultsIncomplete(f"{path.name} is not the file the manifest describes (SHA256 differs)")
+    return manifest
+
+
+def export_csv(dest: Path, results: Path = RESULTS) -> dict:
+    """Verify `results` and, still owning it, copy the manifest and the uncompressed CSV into
+    `dest` (`manifest.json`, `<table>.csv`). The caller then works from `dest` only, so what it
+    loads is the generation that was verified. Returns the manifest."""
+    import gzip
+    dest, results = Path(dest), Path(results)
+    dest.mkdir(parents=True, exist_ok=True)
+    with owned(results):
+        manifest = verify_results(results, files=True)
+        with gzip.open(results / manifest["csv"]["file"], "rb") as src, open(dest / f"{TABLE}.csv", "wb") as out:
+            shutil.copyfileobj(src, out)
+        shutil.copyfile(results / "manifest.json", dest / "manifest.json")
     return manifest
 
 
@@ -262,17 +358,18 @@ def main(argv=None) -> int:
     if argv == ["--recover"]:
         print(recover())
         return 0
-    if argv == ["--verify"]:
+    if argv == ["--verify"] or (len(argv) == 2 and argv[0] == "--export"):
         try:
-            m = verify_results()
+            m = verify_results() if argv == ["--verify"] else export_csv(Path(argv[1]))
         except ResultsIncomplete as problem:
             print(f"results incomplete: {problem}", file=sys.stderr)
             return 1
-        print(f"results complete: {m['csv']['rows']:,} rows, built {m['built_at'][:19]}Z")
+        print(f"results complete: {m['csv']['rows']:,} rows, built {m['built_at'][:19]}Z"
+              + (f"; copied to {argv[1]}" if argv[0] == "--export" else ""))
         return 0
     try:
         manifest = build()
-    except BuildStopped as stop:
+    except (BuildStopped, ResultsBusy) as stop:
         print(f"stopped: {stop}", file=sys.stderr)
         return 1
     print(f"built {manifest['parquet']['rows']:,} rows; {manifest['summary']['blocking_passed']} checks passed")

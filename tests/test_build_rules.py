@@ -183,7 +183,8 @@ def _generations(tmp_path):
 
 
 def _files(results):
-    return {p.name: p.read_text() for p in results.iterdir() if p.is_file()}
+    from ahah_ingest.pipeline import LOCK
+    return {p.name: p.read_text() for p in results.iterdir() if p.is_file() and p.name != LOCK}
 
 
 def test_promotion_interrupted_before_the_journal_leaves_the_old_generation(tmp_path, monkeypatch):
@@ -261,3 +262,114 @@ def test_verify_results_refuses_a_file_the_manifest_does_not_describe(tmp_path):
     with pytest.raises(ResultsIncomplete, match="SHA256 differs"):
         verify_results(results)
     assert verify_results(results, files=False)["csv"]["rows"] == 1
+
+
+PAUSING_BUILD = r'''
+import os, sys, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from ahah_ingest import pipeline
+from ahah_ingest.pipeline import OUTPUTS
+results, flags = Path(sys.argv[2]), Path(sys.argv[3])
+
+def pause(stage):                       # tell the parent where we are, wait for its go-ahead
+    (flags / f"{stage}.reached").write_text(stage)
+    for _ in range(600):
+        if (flags / f"{stage}.go").exists():
+            return
+        time.sleep(0.05)
+    raise SystemExit(f"never released at {stage}")
+
+real_write, real_replace, swapped = pipeline._write_atomic, os.replace, []
+def write_atomic(path, text):
+    if path.name == pipeline.JOURNAL:
+        pause("before_journal")          # new files prepared beside the old ones, journal not yet written
+    real_write(path, text)
+def replace(src, dst):
+    real_replace(src, dst)
+    if str(src).endswith(".new"):
+        swapped.append(dst)
+        if len(swapped) == 1:
+            pause("mid_swap")            # one file swapped, three still .new, journal present
+pipeline._write_atomic, os.replace = write_atomic, replace
+pipeline._build_into = lambda folder: [(folder / n).write_text(f"built {n}") for n in OUTPUTS] and {"built": True}
+pipeline.build(results)
+print("child build finished")
+'''
+
+
+def test_a_running_build_owns_results_and_recovery_verification_and_a_second_build_are_refused(tmp_path, monkeypatch):
+    """The two overlaps of the review of 31 October: recovery while a build has prepared its
+    `.new` files (it used to delete them and the build then reported success with the old
+    generation), and verification while a promotion is half swapped (it used to pass on a
+    mixture). Both are refused while the build owns the folder; the build then completes."""
+    import shutil, subprocess, sys, time
+    from ahah_ingest import pipeline
+    from ahah_ingest.pipeline import OUTPUTS, ResultsBusy, recover, verify_results
+    from ahah_ingest.core.sources import ROOT
+    results, staging = _generations(tmp_path)
+    shutil.rmtree(staging)
+    flags = tmp_path / "flags"; flags.mkdir()
+    child = subprocess.Popen([sys.executable, "-c", PAUSING_BUILD, str(ROOT), str(results), str(flags)],
+                             stdout=subprocess.PIPE, text=True)
+    monkeypatch.setattr(pipeline, "_build_into", lambda folder: pytest.fail("the second build must be refused before building"))
+    try:
+        for stage, expect in (("before_journal", {n: f"old {n}" for n in OUTPUTS}), ("mid_swap", None)):
+            for _ in range(600):
+                if (flags / f"{stage}.reached").exists():
+                    break
+                time.sleep(0.05)
+            assert (flags / f"{stage}.reached").exists(), f"child never reached {stage}"
+            with pytest.raises(ResultsBusy):
+                recover(results)
+            with pytest.raises(ResultsBusy):
+                verify_results(results, files=False)
+            with pytest.raises(ResultsBusy):
+                pipeline.build(results)
+            on_disk = _files(results)
+            if expect:
+                assert {n: on_disk[n] for n in OUTPUTS} == expect                            # the old generation untouched
+                assert all((results / f"{n}.new").exists() for n in OUTPUTS)               # the prepared files not deleted
+            else:
+                assert (results / pipeline.JOURNAL).exists() and on_disk[OUTPUTS[0]] == f"built {OUTPUTS[0]}"
+            (flags / f"{stage}.go").write_text("go")
+        out, _ = child.communicate(timeout=30)
+    finally:
+        if child.poll() is None:
+            child.kill()
+    assert child.returncode == 0 and "child build finished" in out
+    assert {n: _files(results)[n] for n in OUTPUTS} == {n: f"built {n}" for n in OUTPUTS}   # the new generation, whole
+    assert recover(results) == "nothing to recover"
+
+
+def test_ownership_is_reentrant_and_released_on_exit(tmp_path):
+    from ahah_ingest.pipeline import LOCK, ResultsBusy, ResultsIncomplete, owned
+    results = tmp_path / "results"; results.mkdir()
+    with owned(results):
+        with owned(results):                       # build -> recover -> promote nest in one process
+            assert (results / LOCK).exists()
+    with owned(results):
+        pass                                       # released by the outer exit, not the inner one
+    with pytest.raises(ResultsIncomplete, match="no manifest"):
+        with owned(tmp_path / "absent"):
+            pass
+
+
+def test_export_csv_copies_the_verified_generation_and_refuses_a_mixture(tmp_path):
+    import gzip, hashlib, json
+    from ahah_ingest.pipeline import JOURNAL, OUTPUTS, ResultsIncomplete, TABLE, export_csv
+    results = tmp_path / "results"; results.mkdir()
+    (results / OUTPUTS[0]).write_bytes(b"parquet")
+    with gzip.open(results / OUTPUTS[1], "wb") as fh:
+        fh.write(b"ahah_version,datazone_code\n4,S01006506\n")
+    manifest = {"parquet": {"sha256": hashlib.sha256(b"parquet").hexdigest()},
+                "csv": {"file": OUTPUTS[1], "sha256": hashlib.sha256((results / OUTPUTS[1]).read_bytes()).hexdigest(), "rows": 1}, "built_at": "x"}
+    (results / "manifest.json").write_text(json.dumps(manifest))
+    dest = tmp_path / "out"
+    assert export_csv(dest, results)["csv"]["rows"] == 1
+    assert (dest / f"{TABLE}.csv").read_bytes() == b"ahah_version,datazone_code\n4,S01006506\n"
+    assert json.loads((dest / "manifest.json").read_text()) == manifest
+    (results / JOURNAL).write_text("{}")
+    with pytest.raises(ResultsIncomplete):
+        export_csv(tmp_path / "out2", results)
+    assert not (tmp_path / "out2" / f"{TABLE}.csv").exists()

@@ -18,11 +18,12 @@ fi
 SQL="docker exec -i $C /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $PW -C -b"
 for i in $(seq 1 60); do $SQL -Q "SELECT 1" >/dev/null 2>&1 && break; sleep 2; done
 $SQL -Q "IF DB_ID('ahah') IS NULL CREATE DATABASE ahah"
-python3 -m ahah_ingest.pipeline --verify                     # refuses an interrupted promotion or a mismatched CSV
-ROWS=$(python3 -c "import json;print(json.load(open('results/manifest.json'))['csv']['rows'])")
-TOTAL=$(python3 -c "import json;print(json.load(open('results/manifest.json'))['csv']['digest']['total'])")
 W=$(mktemp -d)
-gunzip -c results/ahah_datazone.csv.gz > "$W/ahah_datazone.csv"
+# Verify results/ and copy the manifest and the uncompressed CSV out while owning the folder, so
+# everything below reads one verified generation from $W and never results/ itself.
+python3 -m ahah_ingest.pipeline --export "$W"
+ROWS=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['csv']['rows'])" "$W/manifest.json")
+TOTAL=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['csv']['digest']['total'])" "$W/manifest.json")
 sed "s#/path/to/ahah_datazone.csv#/tmp/ahah/ahah_datazone.csv#" docs/sql/import_csv.sql > "$W/import.sql"
 sed "s#(N'ahah_datazone', 0, 0, 1)#(N'ahah_datazone', $ROWS, $TOTAL, 1)#" docs/sql/check_loaded_digest.sql > "$W/check.sql"
 docker exec $C mkdir -p /tmp/ahah
