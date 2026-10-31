@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import tomllib
 from pathlib import Path
 
@@ -64,7 +65,9 @@ class ResultsBusy(ResultsIncomplete):
     """Another process owns results/ right now: a build, a recovery or a verification."""
 
 
-_HELD: dict = {}      # resolved results folder -> (lock descriptor, depth), for the owning process
+_HELD: dict = {}      # (pid, thread, resolved results folder) -> (lock descriptor, depth): the owner's own nesting
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_HELD.clear)   # a forked child owns nothing; it must take the OS lock itself
 
 
 @contextlib.contextmanager
@@ -75,17 +78,20 @@ def owned(results: Path = RESULTS):
     promotion is published, recovery and verification hold it for their whole run, and a
     consumer that reads the files after verifying them holds it until it has read them. A
     second claimant is refused at once with `ResultsBusy`, never made to wait or to act on
-    files another process is still using. The lock is reentrant within one process and is
-    released by the kernel when the holder dies, so a killed build leaves nothing to clear."""
+    files another process is still using. The lock is reentrant for the owning thread of the
+    owning process only (another thread, or a forked child, is a competitor and takes the OS
+    lock path) and is released by the kernel when the holder dies, so a killed build leaves
+    nothing to clear."""
     results = Path(results).resolve()
-    if results in _HELD:
-        fd, depth = _HELD[results]
-        _HELD[results] = (fd, depth + 1)
+    key = (os.getpid(), threading.get_ident(), results)
+    if key in _HELD:
+        fd, depth = _HELD[key]
+        _HELD[key] = (fd, depth + 1)
         try:
             yield
         finally:
-            fd, depth = _HELD[results]
-            _HELD[results] = (fd, depth - 1)
+            fd, depth = _HELD[key]
+            _HELD[key] = (fd, depth - 1)
         return
     if not results.is_dir():
         raise ResultsIncomplete(f"no manifest in {results}: the folder does not exist")
@@ -96,11 +102,11 @@ def owned(results: Path = RESULTS):
         except OSError as taken:
             raise ResultsBusy(f"{results} is owned by another process (a build, recovery or verification is running); "
                               f"try again when it has finished") from taken
-        _HELD[results] = (fd, 1)
+        _HELD[key] = (fd, 1)
         try:
             yield
         finally:
-            del _HELD[results]
+            del _HELD[key]
             _unlock(fd)
     finally:
         os.close(fd)
@@ -353,12 +359,20 @@ def build_report(manifest: dict, table: pd.DataFrame, rendered: pd.DataFrame, re
     return "\n".join(lines)
 
 
+USAGE = "usage: python -m ahah_ingest.pipeline [--verify | --export DIR | --recover]   (no argument: build)"
+
+
 def main(argv=None) -> int:
     argv = list(argv or [])
+    # Exact commands only. Anything else is a usage error, never a build: a mistyped export must
+    # not replace the current generation.
+    if argv and argv != ["--recover"] and argv != ["--verify"] and not (len(argv) == 2 and argv[0] == "--export"):
+        print(USAGE, file=sys.stderr)
+        return 2
     if argv == ["--recover"]:
         print(recover())
         return 0
-    if argv == ["--verify"] or (len(argv) == 2 and argv[0] == "--export"):
+    if argv:
         try:
             m = verify_results() if argv == ["--verify"] else export_csv(Path(argv[1]))
         except ResultsIncomplete as problem:
