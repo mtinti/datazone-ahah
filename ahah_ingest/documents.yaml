@@ -1,0 +1,41 @@
+# Documents the column descriptions quote, with the hash of the exact copy read. The GeoDS
+# documents are pinned downloads (hashes also in data/sources/geods/SOURCES.md, not committed
+# themselves); the paper is committed under docs/references/. Used by the provenance site; the
+# tests resolve every reference here without the downloads.
+version: 1
+documents:
+  v5_dictionary:
+    kind: pinned_document
+    title: AHAH version 5 variable dictionary
+    path: geods/dictionary_ahah_v5.csv
+    sha256: 94ae1ca291a95146ffaf2840a2aa8030f8844cb9e56d31cf1ba8c3300035e118
+    publisher: Geographic Data Service (GeoDS), University of Liverpool
+    page: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah
+    licence: UK Open Government Licence v3.0
+    applies_to: ['5.1']
+  v5_methodology:
+    kind: pinned_document
+    title: AHAH version 5 technical methodology report
+    path: geods/ahah_v5_technical_methodology.pdf
+    sha256: 8a23d522a8b1d0f64426251c54f314eb57871c3621ebc27cbbbce25fb3a999cb
+    publisher: Geographic Data Service (GeoDS), University of Liverpool
+    page: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah
+    licence: UK Open Government Licence v3.0
+    applies_to: ['5.1']
+  v4_datasources:
+    kind: pinned_document
+    title: AHAH version 4 data sources table
+    path: geods_previous/ahah_datasources.pdf
+    sha256: 5200e682e11c3ef654db57d25b5f261dee54d91e5db1a1d6ccba3cb2247636f8
+    publisher: Geographic Data Service (GeoDS), University of Liverpool
+    page: https://data.geods.ac.uk/dataset/access-to-healthy-assets-hazards-ahah-previous-versions
+    licence: UK Open Government Licence
+    applies_to: ['4']
+  daras2019:
+    kind: repository_document
+    title: "Daras K, Green MA, Davies A, Barr B, Singleton A (2019). Open data on health-related neighbourhood features in Great Britain. Scientific Data 6, 107"
+    path: docs/references/s41597-019-0114-6.pdf
+    sha256: fbab171d40e8224a9ccc02ac7c7cc41a919bdf8f311d3f9cfabeb106836c0472
+    doi: 10.1038/s41597-019-0114-6
+    licence: CC BY 4.0
+    applies_to: ['1']

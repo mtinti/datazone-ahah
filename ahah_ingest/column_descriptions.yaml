@@ -1,0 +1,1371 @@
+# Column definitions by edition, with where each comes from (docs/AHAH_Provenance_Site_Plan.md,
+# section 3). An entry lists definitions, each with the editions it applies to, the text, the
+# unit, and a reference: a quotation from a document in documents.yaml (kind: quotation), a
+# paraphrase of one (kind: paraphrase), a reviewed correction beside a quotation (kind:
+# correction), or our own wording (kind: ours), with the decision id where one applies. The
+# schema descriptions stay the short form; these are the fuller, attributed ones.
+version: 1
+columns:
+  ahah_version:
+  - editions:
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The AHAH edition the row belongs to: 1, 2, 3, 4 or 5.1. Editions are not comparable with each other.'
+    unit: null
+    reference:
+      kind: ours
+      decision: one-table-all-editions
+  datazone_vintage:
+  - editions:
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The Scottish data zone vintage the edition is on: 2011 for editions 1 to 4, 2022 for 5.1. The vintages
+      do not nest.'
+    unit: null
+    reference:
+      kind: ours
+      decision: datazone-lists
+  datazone_code:
+  - editions:
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    kind: ours
+    text: Scottish data zone code (S01...) of the 2011 vintage, read from the edition's code column.
+    unit: null
+    reference:
+      kind: ours
+      decision: datazone-lists
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Lower Super Output Area Code (2011) / Data Zones (Scotland)
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row lsoa21cd
+  - editions:
+    - '5.1'
+    kind: correction
+    unit: null
+    reference:
+      document: v5_methodology
+      location: section 2.2
+    text: 'The dictionary''s "(2011)" is wrong for Scotland: the methodology report, section 2.2, says 2022 data
+      zones, and the file holds 7,392 codes, the 2022 count.'
+  GP:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest GP practice, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - &id001
+    editions:
+    - '2'
+    kind: ours
+    text: 'Units unconfirmed: the version 2 documentation is not held. The column names suggest the revised method
+      of version 3.'
+    unit: unconfirmed
+    reference:
+      kind: ours
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest GP Practice (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row GP
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  bluespace:
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Bluespace (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row bluespace
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  dentist:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest dentist, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Dentist (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row dentist
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  fast_food:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest fast food outlet, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Fast Food Outlet (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row fast_food
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  gambling:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest gambling outlet, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Gambling Outlet (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row gambling
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  greenspace_active:
+  - *id001
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Greenspace (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row greenspace_active
+  hospital:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest hospital, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Hospital with A&E (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row hospital
+  - editions:
+    - '3'
+    - '4'
+    kind: ours
+    text: Drive time in minutes to the nearest hospital. Version 5.1 narrows this to a hospital with an accident
+      and emergency department; earlier editions do not say so.
+    unit: minutes
+    reference:
+      kind: ours
+  leisure:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest leisure centre, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Leisure Centre (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row leisure
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  pharmacy:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest pharmacy, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Pharmacy (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row pharmacy
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  pub_bar:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest pub, bar or nightclub, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Pubs/Bars/Nightclubs (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row pub_bar
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  tobacco:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest tobacconist, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Drive-time to nearest Vape Store / Tobacconists (minutes)
+    unit: minutes
+    reference:
+      document: v5_dictionary
+      location: row tobacco
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  NO2:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Annual mean nitrogen dioxide concentration.
+    unit: µg/m³
+    reference:
+      document: daras2019
+      location: Methods, air quality
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Annual mean Nitrogen Dioxide (ugm3)
+    unit: µg/m³
+    reference:
+      document: v5_dictionary
+      location: row NO2
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  PM10:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Annual mean particulate matter, PM10 concentration.
+    unit: µg/m³
+    reference:
+      document: daras2019
+      location: Methods, air quality
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Annual mean Particulate Matter (ugm3)
+    unit: µg/m³
+    reference:
+      document: v5_dictionary
+      location: row PM10
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  SO2:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Annual mean sulphur dioxide concentration.
+    unit: µg/m³
+    reference:
+      document: daras2019
+      location: Methods, air quality
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Annual mean Sulphur Dioxide (ugm3)
+    unit: µg/m³
+    reference:
+      document: v5_dictionary
+      location: row SO2
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  greenspace:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: 'Passive green space: an area measure of green space within a 900-metre buffer of the area; the unit is
+      not stated by the paper. Scottish values run 0 to 277.5, so it is not a share.'
+    unit: not stated
+    reference:
+      document: daras2019
+      location: Methods, green space
+  - *id001
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: quotation
+    text: Median NDVI value indicating Passive Green Space
+    unit: median NDVI
+    reference:
+      document: v5_dictionary
+      location: row greenspace
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    unit: null
+    reference:
+      kind: ours
+    text: The version 5 wording; the version 3 and 4 methods are the same drive-time or raster approach (methodology
+      report, sections 3 and 5), and version 4 publishes values to 4 decimals.
+  off_licence:
+  - editions:
+    - '1'
+    kind: paraphrase
+    text: Network distance (kilometres) to the nearest off-licence, by road from the area's postcodes.
+    unit: kilometres
+    reference:
+      document: daras2019
+      location: Methods, accessibility indicators
+  - *id001
+  ur:
+  - editions:
+    - '2'
+    kind: ours
+    text: A 0 or 1 flag in the version 2 file that the version 2 build code does not use. 4,687 of the 6,976 Scottish
+      zones have 1; zones with 1 have far higher SIMD access ranks, so 1 is very likely urban. Not documented.
+    unit: flag
+    reference:
+      kind: ours
+      decision: ur-tinyint
+  GP_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `GP` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  bluespace_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `bluespace` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  dentist_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `dentist` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  fast_food_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `fast_food` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  gambling_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `gambling` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  greenspace_active_rnk:
+  - editions:
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `greenspace_active` indicator over Great Britain: 1 is the healthiest area. Minimum ranking
+      (ties share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  hospital_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `hospital` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  leisure_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `leisure` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  pharmacy_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `pharmacy` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  pub_bar_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `pub_bar` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  tobacco_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `tobacco` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  NO2_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `NO2` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  PM10_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `PM10` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  SO2_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `SO2` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  greenspace_rnk:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the `greenspace` indicator over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  GP_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `GP` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
+      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  bluespace_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `bluespace` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  dentist_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `dentist` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  fast_food_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `fast_food` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  gambling_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `gambling` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  greenspace_active_pct:
+  - editions:
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `greenspace_active` indicator over Great Britain, 0 to 100 (101 values): int(rank /
+      max rank * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  hospital_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `hospital` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  leisure_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `leisure` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  pharmacy_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `pharmacy` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  pub_bar_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `pub_bar` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  tobacco_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `tobacco` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  NO2_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `NO2` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
+      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  PM10_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `PM10` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
+      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  SO2_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `SO2` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank * 100);
+      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  greenspace_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the `greenspace` indicator over Great Britain, 0 to 100 (101 values): int(rank / max rank
+      * 100); 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  GP_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `GP` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes -1
+      in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  bluespace_dec:
+  - editions:
+    - '2'
+    kind: ours
+    text: Decile of the `bluespace` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  dentist_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `dentist` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  fast_food_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `fast_food` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  gambling_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `gambling` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  greenspace_active_dec:
+  - editions:
+    - '2'
+    kind: ours
+    text: Decile of the `greenspace_active` indicator over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  hospital_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `hospital` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  leisure_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `leisure` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  pharmacy_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `pharmacy` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  pub_bar_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `pub_bar` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  tobacco_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `tobacco` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  NO2_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `NO2` indicator over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  PM10_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `PM10` indicator over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  SO2_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `SO2` indicator over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  greenspace_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `greenspace` indicator over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  off_licence_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the `off_licence` indicator over Great Britain, 1 to 10; 1 is the healthiest. Version 2 publishes
+      -1 in two zones with no route.
+    unit: decile
+    reference:
+      kind: ours
+      decision: v2-no-route-code
+  domain_h:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Health Domain Score
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row domain_h
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The health domain score on the probit scale, as published: an intermediate of the index, not the quantity
+      the index averages.'
+    unit: probit score
+    reference:
+      kind: ours
+  domain_g:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Green/Bluespace Domain Score
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row domain_g
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The green and blue space domain score on the probit scale, as published: an intermediate of the index,
+      not the quantity the index averages.'
+    unit: probit score
+    reference:
+      kind: ours
+  domain_e:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Air Quality Domain Score
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row domain_e
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The air quality domain score on the probit scale, as published: an intermediate of the index, not the
+      quantity the index averages.'
+    unit: probit score
+    reference:
+      kind: ours
+  domain_r:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Retail Domain Score
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row domain_r
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The retail domain score on the probit scale, as published: an intermediate of the index, not the quantity
+      the index averages.'
+    unit: probit score
+    reference:
+      kind: ours
+  domain_h_exp:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: 'The health domain score of editions 1 and 2: the exponentially transformed domain rank, 0 to 100, 100
+      the worst rank. It inverts exactly to an integer rank, so it is not the probit scale of the later editions.'
+    unit: 0 to 100
+    reference:
+      kind: ours
+      decision: v1-v2-exponential-domains
+  domain_g_exp:
+  - editions:
+    - '2'
+    kind: ours
+    text: 'The green and blue space domain score of editions 1 and 2: the exponentially transformed domain rank,
+      0 to 100, 100 the worst rank. It inverts exactly to an integer rank, so it is not the probit scale of the
+      later editions.'
+    unit: 0 to 100
+    reference:
+      kind: ours
+      decision: v1-v2-exponential-domains
+  domain_e_exp:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: 'The air quality domain score of editions 1 and 2: the exponentially transformed domain rank, 0 to 100,
+      100 the worst rank. It inverts exactly to an integer rank, so it is not the probit scale of the later editions.'
+    unit: 0 to 100
+    reference:
+      kind: ours
+      decision: v1-v2-exponential-domains
+  domain_r_exp:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: 'The retail domain score of editions 1 and 2: the exponentially transformed domain rank, 0 to 100, 100
+      the worst rank. It inverts exactly to an integer rank, so it is not the probit scale of the later editions.'
+    unit: 0 to 100
+    reference:
+      kind: ours
+      decision: v1-v2-exponential-domains
+  domain_h_rnk:
+  - editions:
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the health domain score over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_g_rnk:
+  - editions:
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the green and blue space domain score over Great Britain: 1 is the healthiest area. Minimum ranking
+      (ties share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_e_rnk:
+  - editions:
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the air quality domain score over Great Britain: 1 is the healthiest area. Minimum ranking (ties
+      share the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_r_rnk:
+  - editions:
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the retail domain score over Great Britain: 1 is the healthiest area. Minimum ranking (ties share
+      the lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_h_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the health domain over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 (or
+      0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  domain_g_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the green and blue space domain over Great Britain, 1 to 100: the rank cut into 100 equal
+      bins; 1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  domain_e_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the air quality domain over Great Britain, 1 to 100: the rank cut into 100 equal bins;
+      1 (or 0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  domain_r_pct:
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the retail domain over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 (or
+      0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  domain_h_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the health domain over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_g_dec:
+  - editions:
+    - '2'
+    kind: ours
+    text: Decile of the green and blue space domain over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_e_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the air quality domain over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  domain_r_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the retail domain over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  ahah:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: Access to Healthy Assets and Hazards Index Score
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row ahah
+  - editions:
+    - '1'
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'The overall index score as published: the mean of the exponentially transformed domain ranks (three domains
+      in edition 1, four from edition 2). From edition 3 the published domain scores are probit-scale intermediates;
+      the index averages their ranks after the exponential transformation (version 4 create_index.py, lines 99 to
+      104), not the scores.'
+    unit: score
+    reference:
+      kind: ours
+      decision: v1-v2-exponential-domains
+  ahah_rnk:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: AHAH Index Ranked
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row ahah_rnk
+  - editions:
+    - '2'
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Rank of the overall index over Great Britain: 1 is the healthiest area. Minimum ranking (ties share the
+      lowest rank), except version 4''s five health indicator ranks, which are dense.'
+    unit: rank
+    reference:
+      kind: ours
+      decision: ranks-gb-only
+  ahah_pct:
+  - editions:
+    - '5.1'
+    kind: quotation
+    text: AHAH Index percentiles
+    unit: null
+    reference:
+      document: v5_dictionary
+      location: row ahah_pct
+  - editions:
+    - '3'
+    - '4'
+    - '5.1'
+    kind: ours
+    text: 'Percentile of the overall index over Great Britain, 1 to 100: the rank cut into 100 equal bins; 1 (or
+      0) is the healthiest. Two formulas exist in the publisher''s code (docs/PERCENTILES.md).'
+    unit: percentile
+    reference:
+      kind: ours
+      decision: percentile-scales
+  ahah_dec:
+  - editions:
+    - '1'
+    - '2'
+    kind: ours
+    text: Decile of the overall index over Great Britain, 1 to 10; 1 is the healthiest.
+    unit: decile
+    reference:
+      kind: ours
+      decision: ranks-gb-only
