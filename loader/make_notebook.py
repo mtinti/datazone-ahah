@@ -6,12 +6,14 @@ build's hash, row count and digest from results/manifest.json.
 """
 
 import json
+import sys
 from pathlib import Path
 
 import nbformat as nbf
 
 ROOT = Path(__file__).resolve().parent.parent
-from ahah_ingest.pipeline import verify_results
+sys.path.insert(0, str(ROOT))                          # run as a script from anywhere
+from ahah_ingest.pipeline import verify_results        # noqa: E402
 m = verify_results(ROOT / "results", files=True)     # refuses an interrupted promotion or a CSV the manifest does not describe
 c = m["csv"]
 built = m["built_at"][:10]
