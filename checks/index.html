@@ -14,6 +14,8 @@
         <link rel="prev" href="../decisions/">
       
       
+        <link rel="next" href="../conventions/">
+      
       
         
       
@@ -448,6 +450,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranks and percentiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -515,7 +544,7 @@
 </tr>
 <tr>
 <td><code>^v[\d.]+\.header_is_mapped$</code></td>
-<td>the file's header is exactly the mapped columns, in order: an added, dropped or renamed column stops the build</td>
+<td>the set of header names equals the set of mapped file columns: an added, dropped or renamed column stops the build (order is not checked; the mapping is by name)</td>
 <td>5</td>
 </tr>
 <tr>
@@ -530,7 +559,7 @@
 </tr>
 <tr>
 <td><code>^v[\d.]+\.no_empty_cells$</code></td>
-<td>no cell of the file is empty: every published value is present</td>
+<td>no cell of a Scottish row (code starting S01) is empty: every value the table takes is present; rows of England and Wales are not checked</td>
 <td>5</td>
 </tr>
 <tr>
@@ -609,13 +638,53 @@
 <td>1</td>
 </tr>
 <tr>
-<td><code>^readback\.parquet\.</code></td>
-<td>the Parquet file, re-read, equals the table in rows, columns, types, nullability, key and every cell, and carries the expected metadata</td>
+<td><code>^readback\.parquet\.column_names$</code></td>
+<td>the saved Parquet file's column names equal the schema's, in order</td>
 <td>1</td>
 </tr>
 <tr>
-<td><code>^readback\.csv\.</code></td>
-<td>the CSV, re-read, equals the rendered table in header, rows and every cell</td>
+<td><code>^readback\.parquet\.column_types$</code></td>
+<td>the saved Parquet file's Arrow types equal the schema's (decimal128(38,20), int8, int16, int32, string)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.parquet\.nullability$</code></td>
+<td>the saved Parquet file's nullability flags equal the schema's</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.parquet\.rows$</code></td>
+<td>the saved Parquet file, re-read, has as many rows as the accepted table</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.parquet\.primary_key_unique$</code></td>
+<td>the key is unique in the re-read Parquet file</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.parquet\.cells$</code></td>
+<td>every cell of the re-read Parquet file equals the accepted table's, null for null and value for value</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.parquet\.metadata\.</code></td>
+<td>the saved Parquet file carries the named metadata key with the expected value</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>^readback\.csv\.header$</code></td>
+<td>the written CSV's header equals the exported column list</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.csv\.rows$</code></td>
+<td>the written CSV, re-read, has as many rows as the rendered table</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>^readback\.csv\.cells$</code></td>
+<td>every cell of the re-read CSV equals the rendered text, byte for byte</td>
 <td>1</td>
 </tr>
 <tr>

@@ -436,6 +436,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ranks and percentiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -544,7 +571,7 @@
 <tr>
 <td><code>e_dec</code></td>
 <td><a href="../../columns/domain_e_dec/"><code>domain_e_dec</code></a></td>
-<td>Decile of the air quality domain over Great Britain, 1 to 10; 1 is the healthiest.</td>
+<td>Decile of the physical environment domain (green space and the three air pollutants) over Great Britain, 1 to 10; 1 is the healthiest. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>r</code></td>
@@ -559,77 +586,77 @@
 <tr>
 <td><code>e</code></td>
 <td><a href="../../columns/domain_e_exp/"><code>domain_e_exp</code></a></td>
-<td>The air quality domain score of editions 1 and 2: the exponentially transformed domain rank, 0 to 100, 100 the worst rank. It inverts exactly to an integer rank, so it is not the probit scale of the later editions.</td>
+<td>The physical environment domain score of edition 1, combining green space with the NO2, PM10 and SO2 indicators with equal weights (Daras et al. 2019, pages 3 to 5): the exponentially transformed domain rank, 0 to 100, 100 the worst rank. From edition 3 this column is an air quality domain without green space. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>gamb</code></td>
 <td><a href="../../columns/gambling/"><code>gambling</code></a></td>
-<td>Network distance (kilometres) to the nearest gambling outlet, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest gambling outlet: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>ffood</code></td>
 <td><a href="../../columns/fast_food/"><code>fast_food</code></a></td>
-<td>Network distance (kilometres) to the nearest fast food outlet, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest fast food outlet: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>pubs</code></td>
 <td><a href="../../columns/pub_bar/"><code>pub_bar</code></a></td>
-<td>Network distance (kilometres) to the nearest pub, bar or nightclub, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest pub, bar or nightclub: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>off</code></td>
 <td><a href="../../columns/off_licence/"><code>off_licence</code></a></td>
-<td>Network distance (kilometres) to the nearest off-licence, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest off-licence: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>tob</code></td>
 <td><a href="../../columns/tobacco/"><code>tobacco</code></a></td>
-<td>Network distance (kilometres) to the nearest tobacconist, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest tobacconist: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>gp</code></td>
 <td><a href="../../columns/GP/"><code>GP</code></a></td>
-<td>Network distance (kilometres) to the nearest GP practice, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest GP practice: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>hosp</code></td>
 <td><a href="../../columns/hospital/"><code>hospital</code></a></td>
-<td>Network distance (kilometres) to the nearest hospital, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest hospital with an accident and emergency department (specialist hospitals excluded): the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>dent</code></td>
 <td><a href="../../columns/dentist/"><code>dentist</code></a></td>
-<td>Network distance (kilometres) to the nearest dentist, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest dentist: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>phar</code></td>
 <td><a href="../../columns/pharmacy/"><code>pharmacy</code></a></td>
-<td>Network distance (kilometres) to the nearest pharmacy, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest pharmacy: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>leis</code></td>
 <td><a href="../../columns/leisure/"><code>leisure</code></a></td>
-<td>Network distance (kilometres) to the nearest leisure centre, by road from the area's postcodes.</td>
+<td>Network distance (kilometres) to the nearest leisure centre: the road network distance from the population-weighted centroid of each postcode, averaged over the area's postcodes. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>no2</code></td>
 <td><a href="../../columns/NO2/"><code>NO2</code></a></td>
-<td>Annual mean nitrogen dioxide concentration.</td>
+<td>Annual mean nitrogen dioxide concentration: DEFRA modelled estimates on a 1 km grid, averaged over the cells overlapping the area. Part of the physical environment domain in this edition. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>pm10</code></td>
 <td><a href="../../columns/PM10/"><code>PM10</code></a></td>
-<td>Annual mean particulate matter, PM10 concentration.</td>
+<td>Annual mean particulate matter, PM10 concentration: DEFRA modelled estimates on a 1 km grid, averaged over the cells overlapping the area. Part of the physical environment domain in this edition. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>so2</code></td>
 <td><a href="../../columns/SO2/"><code>SO2</code></a></td>
-<td>Annual mean sulphur dioxide concentration.</td>
+<td>Annual mean sulphur dioxide concentration: DEFRA modelled estimates on a 1 km grid, averaged over the cells overlapping the area. Part of the physical environment domain in this edition. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>gpas</code></td>
 <td><a href="../../columns/greenspace/"><code>greenspace</code></a></td>
-<td>Passive green space: an area measure of green space within a 900-metre buffer of the area; the unit is not stated by the paper. Scottish values run 0 to 277.5, so it is not a share.</td>
+<td>Green space: an area measure of the green space available to each postcode within a 900-metre buffer of the postcode (golf courses with public access included), averaged over the area's postcodes; the unit is not stated by the paper. Scottish values run 0 to 277.5, so it is not a share. (after <a href="../../documents/daras2019/">Daras K, Green MA, Davies A, Barr B, Singleton A (2019)</a>)</td>
 </tr>
 <tr>
 <td><code>gamb_dec</code></td>
