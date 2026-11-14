@@ -1,10 +1,12 @@
 # datazone-ahah
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23783415.svg)](https://doi.org/10.5281/zenodo.23783415)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24226615.svg)](https://doi.org/10.5281/zenodo.24226615)
 [![ci](https://github.com/mtinti/datazone-ahah/actions/workflows/ci.yml/badge.svg)](https://github.com/mtinti/datazone-ahah/actions/workflows/ci.yml)
 
-AHAH for SQL Server, by data zone. Software DOI <https://doi.org/10.5281/zenodo.23783415> (concept, every release);
-pinned sources <https://doi.org/10.5281/zenodo.23783247>.
+AHAH for SQL Server, by data zone. Software DOI <https://doi.org/10.5281/zenodo.24226615> (concept, every release);
+version 0.2.1 <https://doi.org/10.5281/zenodo.24226616>; pinned sources <https://doi.org/10.5281/zenodo.23783247>.
+Versions 0.1.0 and 0.2.0 were withdrawn from Zenodo on 14 November 2026. Their code is under the
+tags `v0.1.0` and `v0.2.0` (`docs/HISTORY_REWRITE_2026-11-14.md`).
 
 The Access to Healthy Assets and Hazards index (AHAH, Geographic Data Science Lab, University of
 Liverpool, hosted by the Geographic Data Service) in one table for SQL Server: every edition, one
@@ -42,7 +44,10 @@ Three warnings:
 
 **Pinned sources archived on Zenodo: <https://doi.org/10.5281/zenodo.23783247>.** Every file the
 build reads, byte for byte with its SHA256, under the Open Government Licence v3.0 with the
-attribution below. A fresh checkout restores `data/sources/` from that record.
+attribution below. A fresh checkout restores `data/sources/` from that record with
+`python tools/restore_sources.py`. It checks each file the build reads against its pinned SHA256,
+never overwrites a file already in place, and with `--check` shows what it would restore and
+writes nothing there. A build from the restored files gives the CSV hash the manifest records.
 
 ## Build
 
@@ -107,7 +112,8 @@ data/sources/    pinned downloads (not committed) and their SOURCES.md (committe
 results/         build output; manifest.json and BUILD_REPORT.md are committed
 docs/            plans, reviews, data dictionary, generated SQL, how it is built, updating
 loader/          the SQL Server loader, the pyodbc upload notebook and the container probe; copy to local/ to fill in
-tests/           31 unit tests plus 6 that need the pinned files
+tools/           restore_sources.py: the pinned files back from the Zenodo record, each checked against its SHA256
+tests/           the tests; those that need the pinned files or the built CSV are skipped without them
 ```
 
 ## Documents

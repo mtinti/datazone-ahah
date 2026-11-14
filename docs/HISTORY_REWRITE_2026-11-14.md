@@ -14,6 +14,10 @@ other file and no other line changed, and no commit was added, removed or reorde
 - **Old notebooks.** The notebook of a commit before version 0.2.1 holds the placeholders and does
   not connect as committed. From version 0.2.1 the notebook is committed with an empty connection
   string, which the analyst fills in at step 1 (`README.md`).
+- **The code archives on Zenodo.** The archives of versions 0.1.0 and 0.2.0 were withdrawn the
+  same day. Their DOIs, and the DOI that stood for every release, 10.5281/zenodo.23783415, now lead to
+  a notice. The code is archived again from version 0.2.1: 10.5281/zenodo.24226615 for every release,
+  10.5281/zenodo.24226616 for 0.2.1.
 - **Nothing else.** The source pins, the built table, its hashes and its digest are the same.
 
 ## Old and new hashes of the commits on `main`
