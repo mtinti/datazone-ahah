@@ -2,7 +2,11 @@
 client machine through pyodbc, as the postcode-SIMD upload notebook does. It carries this
 build's hash, row count and digest from results/manifest.json.
 
-    python loader/make_notebook.py
+    python loader/make_notebook.py [output.ipynb] [--site FILE]
+
+Without arguments it writes loader/upload_ahah.ipynb with an empty connection string. --site FILE
+writes a copy for one site, with the connection string that FILE holds on one line, to a path
+outside the repository or under local/.
 """
 
 import json
@@ -13,6 +17,20 @@ import nbformat as nbf
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))                          # run as a script from anywhere
+
+# A site's own connection string never goes into the committed notebook. Without --site the
+# notebook is written with an empty CONN for the analyst to fill in. With --site FILE, where FILE
+# holds the ODBC connection string on one line, the notebook is written with it, and only to a
+# path outside the repository or under local/, which git ignores.
+ARGS = sys.argv[1:]
+SITE = None
+if "--site" in ARGS:
+    _i = ARGS.index("--site")
+    if _i + 1 >= len(ARGS):
+        sys.exit("stopped: --site needs the path of a file holding the connection string")
+    SITE = Path(ARGS[_i + 1])
+    del ARGS[_i:_i + 2]
+OUT = Path(ARGS[0]) if ARGS else ROOT / "loader" / "upload_ahah.ipynb"
 from ahah_ingest.pipeline import verify_results        # noqa: E402
 m = verify_results(ROOT / "results", files=True)     # refuses an interrupted promotion or a CSV the manifest does not describe
 c = m["csv"]
@@ -34,7 +52,7 @@ columns HEAL-Scot asked for and the left join by data zone with its statuses.
 
 1. Put in one folder: `ahah_datazone.csv.gz` (or the unpacked `.csv`), `import_csv.sql` and
    `check_loaded_digest.sql` from `docs/sql/`.
-2. Set `FOLDER`, `SERVER`, `DATABASE` and `TABLE` in step 1.
+2. Set `FOLDER`, `CONN` and `TABLE` in step 1.
 3. You need `CREATE TABLE` rights in the database. Step 1 tells you whether you have them.
 
 **Run the cells in order, top to bottom.** Every step says what it does, what to expect and why.
@@ -46,7 +64,7 @@ md("""
 
 ### Step 1. Settings, connection and files
 
-**What it does.** Sets the folder, server, database and table; unpacks the CSV if only the archive is present;
+**What it does.** Sets the folder, the connection string and the table; unpacks the CSV if only the archive is present;
 lists the files it needs; connects and shows who you are connected as.
 
 **What to expect.** Three lines starting `found`, then one row: server, database, your login,
@@ -67,13 +85,15 @@ import pyodbc
 # EDIT: the folder holding the three files
 FOLDER   = Path(r"")
 
-SERVER   = "<SERVER>"
-DATABASE = "<DATABASE>"
+# EDIT: the ODBC connection string of your site, on one line. It names the driver, the server,
+# the database and how you sign in. Its shape, with your own values in place of the two in <>:
+#   DRIVER={ODBC Driver 18 for SQL Server};SERVER=<server>;DATABASE=<database>;Trusted_Connection=yes;
+# A copy of this notebook prepared for your site may arrive with the line already filled in.
+CONN     = ""
 TABLE    = "dbo.ahah_datazone"      # one row per Scottish data zone per AHAH edition
 
-DRIVER = "ODBC Driver 18 for SQL Server"
-CONN = (f"DRIVER={{{DRIVER}}};SERVER={SERVER};DATABASE={DATABASE};"
-        "<CONNECTION OPTIONS>")
+if not CONN.strip():
+    raise ValueError("CONN is empty. Put your site's ODBC connection string in step 1, then run the cell again.")
 
 # The CSV may arrive compressed: unpack it once, beside the archive.
 packed = FOLDER / "ahah_datazone.csv.gz"
@@ -106,7 +126,7 @@ with pyodbc.connect(CONN, timeout=10, autocommit=True) as cn:
 if missing:
     raise FileNotFoundError(f"missing from {FOLDER}: {', '.join(missing)}")
 if int(who.can_create_table[0]) != 1:
-    raise PermissionError(f"{who.login[0]} cannot CREATE TABLE in {DATABASE}; ask for the right before running step 3")
+    raise PermissionError(f"{who.login[0]} cannot CREATE TABLE in {who.db[0]}; ask for the right before running step 3")
 print("ready")
 """)
 
@@ -408,8 +428,19 @@ assert out.ahah_status.tolist() == ["matched", "no_code", "no_code", "other_vint
 print("eight rows in, eight out, every status as expected")
 """)
 
+EMPTY_CONN = 'CONN     = ""'
+if SITE is not None:
+    connection = SITE.read_text(encoding="utf-8").strip()
+    if not connection or "\n" in connection:
+        sys.exit(f"stopped: {SITE} must hold one line, the ODBC connection string")
+    target = OUT.resolve()
+    if target.is_relative_to(ROOT.resolve()) and not target.is_relative_to((ROOT / "local").resolve()):
+        sys.exit(f"stopped: a notebook with a site's connection string is not written inside the repository, where it could be committed. "
+                 f"Give a path under {ROOT / 'local'} or outside {ROOT}.")
+    step1 = next(c for c in cells if c.cell_type == "code" and c.source.startswith("# Step 1 "))
+    assert step1.source.count(EMPTY_CONN) == 1
+    step1.source = step1.source.replace(EMPTY_CONN, "CONN     = " + json.dumps(connection))
 nb = nbf.v4.new_notebook(cells=cells, metadata={"kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"},
                                                 "language_info": {"name": "python"}})
-out = ROOT / "loader" / "upload_ahah.ipynb"
-nbf.write(nb, out)
-print(f"wrote {out} ({len(cells)} cells)")
+nbf.write(nb, OUT)
+print(f"wrote {OUT} ({len(cells)} cells)")

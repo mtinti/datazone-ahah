@@ -6,6 +6,7 @@ import importlib.util
 import json
 import numbers
 import re
+import subprocess
 import sys
 import types
 from decimal import Decimal
@@ -85,7 +86,9 @@ def run_step(step, folder, log, monkeypatch, **kw):
     monkeypatch.setattr(pd, "read_sql", read_sql)
     env = {"display": lambda df: None, "__name__": "nb"}
     exec(f'FOLDER = __import__("pathlib").Path(r"{folder}")\n', env)
-    exec(cell_source(1).replace('FOLDER   = Path(r"")', 'FOLDER = FOLDER'), env)
+    step1 = cell_source(1)
+    assert step1.count('CONN     = ""') == 1
+    exec(step1.replace('FOLDER   = Path(r"")', 'FOLDER = FOLDER').replace('CONN     = ""', 'CONN     = "a connection string"'), env)
     if step >= 3:
         # Step 2 hashes the real build's CSV, which a source-only checkout does not have; step 3
         # needs only the header and the path from it.
@@ -175,3 +178,53 @@ def test_comparison_reports_an_identical_duplicate_and_a_changed_cell():
     changed[0] = tuple(Decimal("0.5") if i == gp else v for i, v in enumerate(rows[0]))
     problems = compare.compare(columns, changed, ROOT / "data" / "sources", mapping, out=quiet)
     assert len(problems) == 1 and problems[0][2] == "GP"
+
+
+# --- the connection string of a site never enters the committed notebook ----------------------
+
+def _step_1() -> str:
+    nb = json.loads(NOTEBOOK.read_text())
+    return next("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code" and "".join(c["source"]).startswith("# Step 1 "))
+
+
+def test_the_committed_notebook_has_an_empty_connection_string_and_stops_on_it():
+    step1 = _step_1()
+    assert re.search(r'^CONN     = ""$', step1, re.M), "the committed notebook must carry an empty CONN"
+    assert not re.search(r'^(SERVER|DATABASE)\s*=', step1, re.M)
+    # The only place a server is named is the comment that shows the shape, with placeholders.
+    assert re.findall(r"SERVER=([^;\"]*)", step1) == ["<server>"] and re.findall(r"DATABASE=([^;\"]*)", step1) == ["<database>"]
+    assert "TrustServerCertificate" not in step1
+    # An empty CONN stops the cell before anything is unpacked or connected to.
+    stop = step1.index("if not CONN.strip():")
+    assert stop < step1.index("packed = FOLDER") and stop < step1.index("pyodbc.connect(")
+    env = {}
+    with pytest.raises(ValueError, match="CONN is empty"):
+        exec("CONN = '  '\n" + step1[stop:step1.index("\n\n", stop)], env)
+
+
+def _make_notebook(*args):
+    return subprocess.run([sys.executable, str(ROOT / "loader" / "make_notebook.py"), *map(str, args)], capture_output=True, text=True, cwd=ROOT)
+
+
+@pytest.mark.skipif(not (ROOT / "results" / "manifest.json").is_file(), reason="no build present: the generator verifies the build before it writes")
+def test_a_site_copy_carries_the_connection_string_and_cannot_be_written_into_the_repository(tmp_path):
+    site = tmp_path / "site_connection.txt"
+    site.write_text("DRIVER={ODBC Driver 18 for SQL Server};SERVER=a-test-server;DATABASE=a_test_db;Trusted_Connection=yes;\n")
+    out = tmp_path / "site_copy.ipynb"
+    done = _make_notebook(out, "--site", site)
+    assert done.returncode == 0, done.stderr
+    text = out.read_text()
+    assert "SERVER=a-test-server;DATABASE=a_test_db" in text and 'CONN     = \\"\\"' not in text
+    before = NOTEBOOK.read_bytes()
+    # The committed path, and any other path inside the repository outside local/, is refused.
+    for target in (NOTEBOOK, ROOT / "docs" / "site_copy.ipynb"):
+        done = _make_notebook(target, "--site", site)
+        assert done.returncode != 0 and "not written inside the repository" in done.stderr, target
+        assert not (ROOT / "docs" / "site_copy.ipynb").exists()
+    assert NOTEBOOK.read_bytes() == before
+    # A site file that is empty, or holds more than one line, is refused.
+    for bad in ("", "DRIVER=x;\nSERVER=y;\n"):
+        site.write_text(bad)
+        done = _make_notebook(tmp_path / "bad.ipynb", "--site", site)
+        assert done.returncode != 0 and "must hold one line" in done.stderr
+    assert not (tmp_path / "bad.ipynb").exists()

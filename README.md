@@ -66,7 +66,7 @@ verifies the file hash, imports, and runs the check script, whose expected row c
 come from the manifest, never from the loaded table. When the server cannot read the
 client's files, which rules out `BULK INSERT`, use `loader/upload_ahah.ipynb` instead: it sends the
 rows through pyodbc in chunks, then runs the same digest check and shows the table in use. Regenerate it
-after a rebuild with `python loader/make_notebook.py`. `loader/compare_sql_with_sources.py` then compares every
+after a rebuild with `python loader/make_notebook.py`. The notebook is committed with an empty connection string, `CONN`, which the analyst fills in at step 1. A copy for one site is written with `python loader/make_notebook.py local/upload_ahah_site.ipynb --site local/site_connection.txt`, where the file holds that site's ODBC connection string on one line. `local/` is ignored by git, and the generator refuses to write such a copy anywhere else inside the repository. `loader/compare_sql_with_sources.py` then compares every
 cell of the loaded table with the original GeoDS files, independently of the build. `loader/sqlserver_probe.sh` runs the loader's SQL
 against a throwaway SQL Server 2022 container and adds two probes: SQL Server's rendering of
 chosen cells equals the CSV text, and the left join by data zone returns every cohort row once
