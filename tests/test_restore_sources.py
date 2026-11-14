@@ -145,6 +145,20 @@ def test_members_of_a_restored_archive_are_extracted_and_checked(tmp_path, remot
     assert "rel/extracted/2008.csv" not in tree(root)
 
 
+def test_the_token_goes_only_to_the_download_that_needs_it(tmp_path, remote):
+    """The archive of a restricted record needs the token. The public copies of the data zone
+    lists do not, and must not be sent it."""
+    served, asked = remote
+    packed = io.BytesIO()
+    with zipfile.ZipFile(packed, "w") as z:
+        z.writestr("list.dbf", GOOD)
+    served.update(u1=GOOD, u2=GOOD, z1=packed.getvalue())
+    items = [item(dest="restricted.7z", url="u1", auth=True), item(dest="public.csv", url="u2"),
+             {"dest": "list.dbf", "hash": sha(GOOD), "algorithm": "sha256", "source": "a zip", "zip_url": "z1", "member": "list.dbf"}]
+    tool.restore(items, tmp_path, check=False, token="secret-token", log=lambda *a: None)
+    assert asked == [("u1", "secret-token"), ("u2", None), ("z1", None)]
+
+
 def test_a_refused_record_is_reported_without_the_token(monkeypatch, capsys, tmp_path):
     token_file = tmp_path / "token"
     token_file.write_text("a-very-secret-token\n")
