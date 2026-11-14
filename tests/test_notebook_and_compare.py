@@ -206,8 +206,10 @@ def _make_notebook(*args):
     return subprocess.run([sys.executable, str(ROOT / "loader" / "make_notebook.py"), *map(str, args)], capture_output=True, text=True, cwd=ROOT)
 
 
-@pytest.mark.skipif(not (ROOT / "results" / "manifest.json").is_file(), reason="no build present: the generator verifies the build before it writes")
+@pytest.mark.skipif(not (ROOT / "results" / "ahah_datazone.csv.gz").is_file(),
+                    reason="built CSV not present: the generator verifies the build before it writes a notebook")
 def test_a_site_copy_carries_the_connection_string_and_cannot_be_written_into_the_repository(tmp_path):
+    pytest.importorskip("nbformat", reason="nbformat is needed only to regenerate the notebook")
     site = tmp_path / "site_connection.txt"
     site.write_text("DRIVER={ODBC Driver 18 for SQL Server};SERVER=a-test-server;DATABASE=a_test_db;Trusted_Connection=yes;\n")
     out = tmp_path / "site_copy.ipynb"
