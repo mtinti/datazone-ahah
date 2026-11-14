@@ -1,10 +1,10 @@
 {
- "built_at": "2026-10-31T08:36:56.987439+00:00",
+ "built_at": "2026-11-14T17:56:01.410555+00:00",
  "build": {
-  "commit": "1b6263b2152ac31c2fecd272d8443dee40d9efad",
+  "commit": "a5cb0f46f8646948ccf8969eca97311f9fff3ccb",
   "dirty": false,
   "modified": [],
-  "package_version": "0.1.0",
+  "package_version": "0.2.1",
   "schema_version": "ahah_datazone_v1"
  },
  "table": "ahah_datazone",
